@@ -274,3 +274,23 @@ y POST PENDING; la nota visible aclara que Wompi aún no está conectado y no ha
 No cambia contratos, idempotencia, persistencia ni la autoridad del backend.
 
 Verificado: banner y enlace al carrito en los nueve tamaños del brief con Chrome emulado; CTA → una sola solicitud PENDING con API simulada. Las dos pruebas de navegación nuevas elevan Jest a 99 casos, sin cambios de contratos.
+
+## Cierre de la iteración visual — 13/11/2026
+
+Los cambios funcionales, estilos, fuentes locales con licencia, capturas y pruebas del
+rediseño están guardados en `06d9af4`; la corrección responsive del banner y el CTA
+Continuar con el pago están en `9f2b3d5`. Se conserva ese historial sin duplicarlo.
+
+Verificación de cierre repetida: `npm run lint`, `npm run typecheck`, `npm run build`
+y `npm run test:cov`, todos correctos. Jest: 99 pruebas en 9 suites; cobertura de
+sentencias 97,92%, ramas 96,40%, funciones 98,10% y líneas 97,83%.
+Además, `npm test -- --runTestsByPath test/select.spec.tsx`: 4 pruebas correctas de
+AtelierSelect (selección/indicador, teclado/typeahead/Escape, foco, disabled/error y
+bloqueo/restauración del fondo). No se agregaron dependencias ni se cambió el código.
+
+Este cierre no repite la inspección visual en navegador; conserva sus capturas y
+límites documentados. Pendientes: Safari/Firefox, dispositivos físicos, lector de
+pantalla y teclado virtual; captura/pago Wompi Sandbox y estados reales; validación
+AWS, HTTPS y URLs públicas. Las pruebas visuales anteriores usaron API simulada.
+No se incluyen instalaciones de skills, `.codex/` ni `skills-lock.json` en el commit.
+No se realiza push, merge ni despliegue.
