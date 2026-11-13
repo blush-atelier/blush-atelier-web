@@ -1,10 +1,12 @@
 # Acceptance checklist — tick off with evidence
 
+Auditoría consolidada del 13/11/2026: [matriz y plan mínimo en el repositorio backend](../../blush-atelier-api/docs/delivery-audit.md). Los apartados de evidencia de abajo registran hitos históricos; no prueban pagos Wompi ni AWS. Medición actual: API 111 + 23 integración, WEB 99 pruebas; ambos >80% en las cuatro métricas.
+
 Frontend local: catálogo → entrega → resumen → reserva PENDING. Evidencia y límites en [README](../README.md) y [notas](decisions-and-interview-notes.md). Los pagos y AWS siguen pendientes. Las pruebas de estados finales usan respuestas simuladas de API; no prueban Wompi.
 
 ## 1. Repository and setup
 
-- [ ] Neutral public repository name; does not contain the company name.
+- [x] Neutral public repository name; visibility confirmed through GitHub metadata on 13/11/2026.
 - [x] Independent frontend `blush-atelier-web` and backend `blush-atelier-api`; see README.
 - [x] `.gitignore` excludes `.env`, build output, node_modules, coverage, local DB files.
 - [x] `.env.example` lists variable names only; no real values.

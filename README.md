@@ -85,3 +85,5 @@ Verificación visual en Chrome de Windows: los nueve tamaños solicitados, desde
 Wompi Sandbox: captura alojada/tokenizada, inicio de pago, verificación en backend, webhook e idempotencia del pago; luego E2E Sandbox. AWS: S3/CloudFront, HTTPS, fallback SPA y API conectada; configurar origen permitido/cookies y OIDC tras validar infraestructura. URLs públicas frontend/API/Swagger: **pendientes de verificar**. No se han desplegado recursos desde este cambio.
 
 [Requisitos](docs/requirements.md) · [Checklist](docs/acceptance-checklist.md) · [Decisiones y punto de retoma](docs/decisions-and-interview-notes.md)
+
+[Auditoría de entrega y plan mínimo](../blush-atelier-api/docs/delivery-audit.md) (repositorio backend local).
