@@ -93,3 +93,13 @@ This document separates explicit requirements from optional improvements. The as
 - Order/delivery tracking summary.
 - Admin-style inventory view only if it does not delay checkout, tests, or deployment.
 - Interview notes and architecture decision records.
+
+## H. Aclaración visual contrastada con el PDF
+
+El PDF proporcionado se revisó localmente (páginas 2–4). El resumen requiere desglose
+de producto, tarifa base y envío con acción de pago en un Backdrop, con referencia a
+https://m2.material.io/components/backdrop. Se implementa una interpretación de dos
+capas; actualmente la acción es Confirmar reserva y el pago sigue pendiente.
+El carrito es una mejora solicitada previa a entrega: un producto y varias unidades,
+con confirmación para reemplazar la referencia. No sustituye el flujo obligatorio de
+tarjeta/entrega → resumen → resultado de pago → producto con stock actualizado.

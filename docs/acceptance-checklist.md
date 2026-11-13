@@ -162,3 +162,12 @@ no acreditan pagos Wompi. Faltan captura/tokenización Sandbox, inicio/verificac
 pago y webhook en backend, pruebas completas con proveedor y validación AWS/HTTPS,
 CORS/cookies y rutas SPA. CI está definido; falta evidencia remota y protección de
 ramas. Los commits son locales; publicar y promover se revisará aparte.
+
+## Evidencia de carrito y Backdrop
+
+- [x] Agregar al carrito abre revisión previa a entrega; modificar/eliminar sin reservar stock.
+- [x] Un producto, varias unidades; reemplazo con confirmación y recuperación tras F5.
+- [x] Resumen visual con capa posterior de producto y frontal con desglose y acción.
+- [x] Solicitudes pendientes/inciertas bloquean cambios y conservan idempotencia.
+- [x] 91 pruebas Jest; carrito y resumen revisados en Chrome a 320–1920 px.
+- [ ] Completar tarjeta/tokenización y botón de pago Sandbox exigidos por PDF.
