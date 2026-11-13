@@ -1,0 +1,215 @@
+@layer components {
+  .checkout-dialog {
+    width: min(850px, calc(100% - 20px));
+    max-height: calc(100dvh - 24px);
+    padding: 0;
+    border: 0;
+    border-radius: 20px;
+    background: var(--white);
+    box-shadow: 0 24px 100px #352e2a30;
+    overflow: auto;
+  }
+  .checkout-dialog::backdrop {
+    background: #2e211db0;
+  }
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 24px 20px 18px;
+    background: var(--white);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    border-bottom: 1px solid var(--line);
+  }
+  .dialog-header h2 {
+    font-size: 31px;
+    margin-top: 7px;
+    line-height: 1.15;
+  }
+  .dialog-header > .icon-button {
+    margin-right: -8px;
+    margin-top: -6px;
+  }
+  .checkout-steps {
+    display: flex;
+    gap: 22px;
+    list-style: none;
+    padding: 18px 20px;
+    margin: 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .checkout-steps li {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .checkout-steps li > span {
+    height: 23px;
+    width: 23px;
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 9px;
+  }
+  .checkout-steps .is-active {
+    color: var(--cocoa);
+  }
+  .checkout-steps .is-active > span {
+    border-color: var(--cocoa);
+    background: var(--cocoa);
+    color: var(--white);
+  }
+  .checkout-steps .icon {
+    width: 12px;
+    height: 12px;
+  }
+  .dialog-body {
+    padding: 23px 20px 22px;
+  }
+  .form-intro {
+    font-size: 13px;
+    line-height: 1.75;
+    margin-bottom: 23px;
+  }
+  .form-intro span {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .checkout-fields {
+    display: grid;
+    gap: 19px;
+  }
+  .form-field label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .form-field input {
+    height: 46px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--white);
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .form-field input::placeholder {
+    color: var(--muted);
+  }
+  .form-field input[aria-invalid='true'] {
+    border-color: var(--error);
+  }
+  .field-error {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--error);
+    margin-top: 6px;
+  }
+  .payment-note {
+    background: var(--rose-soft);
+    padding: 15px 16px;
+    margin-top: 24px;
+    font-size: 12px;
+  }
+  .payment-note-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .payment-note-label small {
+    font-size: 9px;
+    color: var(--rose);
+    font-weight: 500;
+  }
+  .payment-note p {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 7px;
+    line-height: 1.8;
+  }
+  .dialog-actions {
+    display: grid;
+    gap: 15px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+  .dialog-actions > p {
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .delivery-preview {
+    font-size: 12px;
+    margin-top: 19px;
+    color: var(--muted);
+  }
+  .delivery-preview h4 {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 5px;
+  }
+  .review-amounts {
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+  }
+  .amount-summary {
+    margin: 18px 0 0;
+  }
+  .amount-summary > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 12px 0;
+    font-size: 12px;
+    align-items: baseline;
+  }
+  .amount-summary dt {
+    color: var(--muted);
+  }
+  .amount-summary dt > span {
+    font-size: 10px;
+  }
+  .amount-summary dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: right;
+  }
+  .amount-summary .amount-total {
+    border-top: 1px solid var(--line);
+    padding-top: 21px;
+    margin-top: 20px;
+    font-size: 23px;
+  }
+  .amount-total dt {
+    color: var(--ink);
+    font-size: 18px;
+  }
+  .amount-total dt small {
+    font-size: 9px;
+    color: var(--muted);
+    margin-left: 5px;
+  }
+  .review-amounts > .button {
+    width: 100%;
+    margin-top: 23px;
+  }
+  .safe-note {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-top: 15px;
+  }
+  .restore-summary .button {
+    width: 100%;
+  }
+}

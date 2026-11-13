@@ -1,0 +1,108 @@
+@layer responsive {
+  @media (min-width: 600px) {
+    .section-wrap {
+      width: min(1240px, calc(100% - 72px));
+    }
+    .checkout-dialog {
+      width: min(850px, calc(100% - 48px));
+    }
+    .dialog-header {
+      padding: 28px 30px 22px;
+    }
+    .dialog-header h2 {
+      font-size: 39px;
+    }
+    .dialog-body {
+      padding: 26px 30px 30px;
+    }
+    .checkout-steps {
+      padding-inline: 30px;
+      font-size: 11px;
+      gap: 35px;
+    }
+    .checkout-fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .form-field--wide {
+      grid-column: 1/-1;
+    }
+    .dialog-actions {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+    .dialog-actions > p {
+      max-width: 230px;
+    }
+    .review-amounts {
+      padding: 0 0 0 28px;
+      border-top: 0;
+      border-left: 1px solid var(--line);
+    }
+    .order-intro h1 {
+      font-size: 60px;
+    }
+    .page-empty h1 {
+      font-size: 58px;
+    }
+  }
+  @media (min-width: 900px) {
+    .order-link {
+      font-size: 12px;
+    }
+    .order-page {
+      padding-block: 65px 85px;
+    }
+    .order-intro {
+      margin-bottom: 50px;
+    }
+    .order-intro h1 {
+      font-size: 72px;
+    }
+    .order-layout {
+      grid-template-columns: 1.3fr 0.9fr;
+      gap: clamp(50px, 7vw, 110px);
+    }
+    .order-summary {
+      padding: 28px;
+    }
+    .order-progress {
+      min-width: 0;
+    }
+    .order-timeline {
+      margin-block: 40px;
+    }
+    .order-timeline li {
+      padding-bottom: 38px;
+    }
+    .order-timeline h2 {
+      font-size: 14px;
+    }
+    .order-timeline p {
+      font-size: 12px;
+    }
+    .order-product .product-art {
+      width: 88px;
+    }
+    .order-product h2 {
+      font-size: 26px;
+    }
+    .page-empty {
+      padding-block: 80px;
+    }
+  }
+  @media (max-width: 359px) {
+    .dialog-header h2 {
+      font-size: 28px;
+    }
+    .checkout-steps {
+      gap: 15px;
+    }
+    .amount-summary .amount-total {
+      font-size: 20px;
+    }
+    .order-buttons > .button {
+      width: 100%;
+    }
+  }
+}
