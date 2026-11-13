@@ -3,6 +3,7 @@
 This document separates explicit requirements from optional improvements. The assessment PDF is the authority.
 
 ## A. Explicit functional requirements
+
 1. Show a product with description, price, and available stock.
 2. Provide a "Pay with credit card" action.
 3. Open a modal to collect credit-card information.
@@ -22,6 +23,7 @@ This document separates explicit requirements from optional improvements. The as
 12. Seed database with dummy products. No product creation endpoint is required.
 
 ## B. Explicit frontend requirements
+
 - SPA built with React or Vue only (selected: React).
 - Mobile-oriented responsive design; minimum reference is iPhone SE (2020), 1334 x 750 pixels as stated in PDF.
 - Redux or Vuex mandatory (selected: Redux Toolkit).
@@ -30,6 +32,7 @@ This document separates explicit requirements from optional improvements. The as
 - CSS framework is optional; Flexbox/Grid are encouraged.
 
 ## C. Explicit backend requirements
+
 - API in JavaScript/TypeScript or Ruby using NestJS, Grappe, or Sinatra (selected: NestJS + TypeScript).
 - No Rails or other backend frameworks.
 - Business logic must not live in routes/controllers.
@@ -39,6 +42,7 @@ This document separates explicit requirements from optional improvements. The as
 - Include data model design in README.
 
 ## D. Explicit quality and delivery requirements
+
 - Jest unit tests in frontend and backend.
 - More than 80% coverage in both frontend and backend.
 - Add measured test results to README.
@@ -49,7 +53,9 @@ This document separates explicit requirements from optional improvements. The as
 - Minimum score to continue: 100 points.
 
 ## E. Scoring
+
 ### Base (100 points)
+
 - README completed correctly: 5
 - Fast-loading images and no UI/UX overflow: 5
 - Full credit-card checkout onboarding: 20
@@ -58,6 +64,7 @@ This document separates explicit requirements from optional improvements. The as
 - App and API deployed through a cloud provider: 20
 
 ### Bonus (up to 50 points)
+
 - OWASP alignment, HTTPS, security headers: 5
 - Fully responsive and works in different browsers: 5
 - CSS skills: 10
@@ -66,16 +73,20 @@ This document separates explicit requirements from optional improvements. The as
 - ROP: 10
 
 ## F. Chosen implementation decisions (not extra assessment requirements)
-- Single public monorepo: `smart-checkout-platform` (or another neutral name).
+
+- Two independent public repositories: `blush-atelier-web` (React) and `blush-atelier-api` (NestJS).
 - Frontend: React + TypeScript + Vite + Redux Toolkit + React Router.
 - Backend: NestJS + TypeScript.
 - PostgreSQL + TypeORM; Docker Compose locally.
 - Jest in both apps (do not leave Vite's default Vitest as the only test runner).
 - AWS: S3 + CloudFront for frontend; Lambda + API Gateway for backend; evaluate RDS PostgreSQL for database.
-- Wompi Sandbox only.
+- Wompi Sandbox only in every environment.
+- Permanent branches: `development`, `staging`, `production`; short-lived `feature/*` branches. `production` is the delivery branch.
+- Development is local; staging validates releases; production is published in AWS. Evaluate costs before creating additional AWS environments.
 - Premium cosmetics storefront visual style: beige/blush/rose/cocoa. Product and inventory content should make the stock requirement obvious.
 
 ## G. Valuable additions, only after all required flows work
+
 - Product mini-cart/checkout basket (keep scope small; one product is enough if the test's single-product story is preserved).
 - Inventory availability indicator and low-stock state.
 - Transaction reference/status timeline.
