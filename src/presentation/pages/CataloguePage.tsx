@@ -12,7 +12,6 @@ import {
 } from '../../domain/presentation';
 import { Pagination } from '../components/Pagination';
 import { CategoryDiscovery } from '../components/CategoryDiscovery';
-import { useReveal } from '../useReveal';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { ProductArt, imageSmall, imageLarge } from '../components/ProductArt';
 import { Icon } from '../components/Icon';
@@ -39,9 +38,7 @@ export function CataloguePage() {
   }, [dispatch]);
   const visible = filterProducts(products, search, category, sort, brand);
   const pagination = paginateProducts(visible, Number(params.get('page') ?? 1));
-  const reveal = useReveal(
-    pagination.items.map((product) => product.id).join(','),
-  );
+  const collection = useRef<HTMLElement>(null);
   useEffect(() => {
     if (
       catalogueStatus !== 'ready' ||
@@ -69,7 +66,7 @@ export function CataloguePage() {
   }
   function scrollCollection() {
     collectionHeading.current?.focus({ preventScroll: true });
-    reveal.current?.scrollIntoView({
+    collection.current?.scrollIntoView({
       behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
         ? 'auto'
         : 'smooth',
@@ -92,7 +89,6 @@ export function CataloguePage() {
     <>
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">EL ARTE DE LO COTIDIANO</p>
           <h1 tabIndex={-1}>
             El color de
             <br />
@@ -144,10 +140,13 @@ export function CataloguePage() {
           </Link>
         </div>
       )}
-      <section ref={reveal} className="collection section-wrap" id="coleccion">
+      <section
+        ref={collection}
+        className="collection section-wrap"
+        id="coleccion"
+      >
         <div className="section-heading">
           <div>
-            <p className="eyebrow">01 / SELECCIÓN ATELIER</p>
             <h2 ref={collectionHeading} tabIndex={-1}>
               Tus nuevos esenciales.
             </h2>
@@ -167,7 +166,7 @@ export function CataloguePage() {
               onChange={(event) => setFilter('q', event.target.value)}
               type="search"
               maxLength={120}
-              placeholder="Encuentra tu próximo esencial"
+              placeholder="Buscar un producto"
             />
             {search && (
               <button
@@ -264,8 +263,8 @@ export function CataloguePage() {
           <Loading label="Buscando tus próximos esenciales…" />
         ) : (
           <div className="product-grid" id="product-grid">
-            {pagination.items.map((product, index) => (
-              <article className="product-card" data-reveal key={product.id}>
+            {pagination.items.map((product) => (
+              <article className="product-card" key={product.id}>
                 <Link
                   className="product-image-link"
                   to={`/producto/${product.id}`}
@@ -273,9 +272,6 @@ export function CataloguePage() {
                   aria-label={`Ver ${product.name}`}
                 >
                   <ProductArt product={product} />
-                  <span className="product-index">
-                    {String(pagination.start + index).padStart(2, '0')}
-                  </span>
                 </Link>
                 <div className="product-card-meta">
                   <p className="product-category">{brandOf(product)}</p>
@@ -366,7 +362,6 @@ export function CataloguePage() {
       </section>
       <section className="faq section-wrap" id="ayuda">
         <div>
-          <p className="eyebrow">ESTAMOS PARA ACOMPAÑARTE</p>
           <h2>
             Una selección,
             <br />

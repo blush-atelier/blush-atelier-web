@@ -11,14 +11,7 @@
   }
   .discovery-heading h2 {
     font-size: clamp(28px, 3vw, 38px);
-    margin-top: 9px;
-  }
-  .atelier-flower {
-    color: var(--rose);
-    font-size: 42px;
-    line-height: 1;
-    display: inline-block;
-    transform: rotate(12deg);
+    margin-top: 0;
   }
   .category-discovery-grid {
     display: grid;
@@ -47,6 +40,9 @@
       background var(--duration),
       transform var(--duration),
       border-color var(--duration);
+  }
+  .category-discovery-card:focus-visible {
+    outline-offset: -4px;
   }
   .category-discovery-card .product-art {
     width: 66px;
@@ -117,11 +113,11 @@
     text-underline-offset: 4px;
     color: var(--muted);
   }
-  @media (hover: hover) {
+  @media (hover: hover) and (pointer: fine) {
     .category-discovery-card:hover:not(:disabled) {
       background: var(--rose-soft);
       border-color: #cdb6ac;
-      transform: translateY(-3px);
+      transform: translateY(-2px);
     }
   }
 }

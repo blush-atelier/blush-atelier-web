@@ -99,12 +99,15 @@
   .review-delivery {
     padding-bottom: 19px;
     border-bottom: 1px solid var(--line);
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
     justify-content: space-between;
     gap: 16px;
   }
   .review-delivery .delivery-preview {
+    min-width: 0;
+    overflow-wrap: anywhere;
     margin: 0;
   }
   .review-delivery > .muted {
@@ -113,7 +116,8 @@
   }
   .review-delivery > .text-button {
     font-size: 11px;
-    max-width: 130px;
+    justify-self: start;
+    max-width: 100%;
   }
   .summary-front-layer .review-amounts {
     border: 0;
@@ -153,8 +157,20 @@
       border: 0;
       padding: 24px 0 0;
     }
+    .summary-front-layer .review-delivery {
+      display: flex;
+      align-items: start;
+    }
     .summary-front-layer .review-delivery .text-button {
       max-width: none;
+    }
+  }
+}
+
+@layer responsive {
+  @media (max-width: 359px) {
+    .summary-front-layer .amount-summary .amount-total {
+      font-size: 22px;
     }
   }
 }

@@ -459,3 +459,24 @@ describe('UI conectada mediante los puertos', () => {
     await screen.findByText('Sin unidades disponibles');
   });
 });
+
+test('cambiar de paso reinicia el scroll del modal y mantiene el título enfocado', async () => {
+  const { user } = setup(`/producto/${productId}`);
+  const dialog = await openDetails(user);
+  await fill(user);
+  dialog.scrollTop = 600;
+  await user.click(screen.getByRole('button', { name: 'Revisar mi pedido' }));
+  const heading = await screen.findByRole('heading', {
+    name: 'Resumen de tu compra.',
+  });
+  expect(heading).toHaveFocus();
+  expect(dialog.scrollTop).toBe(0);
+  dialog.scrollTop = 400;
+  await user.click(
+    screen.getByRole('button', { name: 'Editar datos de entrega' }),
+  );
+  expect(
+    screen.getByRole('heading', { name: 'Tus datos y entrega.' }),
+  ).toHaveFocus();
+  expect(dialog.scrollTop).toBe(0);
+});

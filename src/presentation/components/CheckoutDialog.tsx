@@ -118,7 +118,11 @@ export function CheckoutDialog() {
     };
   }, [open]);
   useEffect(() => {
-    if (open) heading.current?.focus();
+    if (open) {
+      heading.current?.focus({ preventScroll: true });
+      // El scroll del formulario no debe ocultar el inicio del resumen.
+      if (dialog.current) dialog.current.scrollTop = 0;
+    }
   }, [checkout.step, open]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -150,7 +154,6 @@ export function CheckoutDialog() {
     >
       <div className="dialog-header">
         <div>
-          <p className="eyebrow">TU COMPRA ATELIER</p>
           <h2 ref={heading} id="checkout-title" tabIndex={-1}>
             {checkout.step === 'details'
               ? 'Tus datos y entrega.'
@@ -189,31 +192,33 @@ export function CheckoutDialog() {
               <br />
               <span>Entrega en Colombia.</span>
             </p>
-            {selection.map(
-              ({ product, quantity }, index) =>
-                product && (
-                  <div className="checkout-selection" key={product.id}>
-                    <ProductArt product={product} />
-                    <div>
-                      <strong>{product.name}</strong>
-                      <p>Cantidad: {quantity}</p>
-                      {index === 0 && (
-                        <button
-                          type="button"
-                          className="text-button"
-                          disabled={busy}
-                          onClick={() => {
-                            dispatch(actions.checkoutClosed());
-                            navigate('/carrito');
-                          }}
-                        >
-                          Revisar carrito
-                        </button>
-                      )}
+            <div className="checkout-selection-list">
+              {selection.map(
+                ({ product, quantity }, index) =>
+                  product && (
+                    <div className="checkout-selection" key={product.id}>
+                      <ProductArt product={product} />
+                      <div>
+                        <strong>{product.name}</strong>
+                        <p>Cantidad: {quantity}</p>
+                        {index === 0 && (
+                          <button
+                            type="button"
+                            className="text-button"
+                            disabled={busy}
+                            onClick={() => {
+                              dispatch(actions.checkoutClosed());
+                              navigate('/carrito');
+                            }}
+                          >
+                            Revisar carrito
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ),
-            )}
+                  ),
+              )}
+            </div>
             <fieldset disabled={busy}>
               <legend className="sr-only">Contacto y dirección</legend>
               <div className="checkout-fields">

@@ -1,7 +1,11 @@
 @layer components {
   .checkout-dialog {
-    width: min(850px, calc(100% - 20px));
+    width: min(850px, calc(100% - 24px));
     max-height: calc(100dvh - 24px);
+    overscroll-behavior: contain;
+    scroll-padding-block: 110px 24px;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
     padding: 0;
     border: 0;
     border-radius: 20px;
@@ -16,7 +20,7 @@
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    padding: 24px 20px 18px;
+    padding: 18px 16px;
     background: var(--white);
     position: sticky;
     top: 0;
@@ -24,8 +28,8 @@
     border-bottom: 1px solid var(--line);
   }
   .dialog-header h2 {
-    font-size: 31px;
-    margin-top: 7px;
+    font-size: clamp(24px, 5vw, 32px);
+    margin-top: 0;
     line-height: 1.15;
   }
   .dialog-header > .icon-button {
@@ -36,7 +40,7 @@
     display: flex;
     gap: 22px;
     list-style: none;
-    padding: 18px 20px;
+    padding: 12px 16px;
     margin: 0;
     border-bottom: 1px solid var(--line);
     font-size: 10px;
@@ -69,11 +73,11 @@
     height: 12px;
   }
   .dialog-body {
-    padding: 23px 20px 22px;
+    padding: 20px 16px 24px;
   }
   .form-intro {
-    font-size: 13px;
-    line-height: 1.75;
+    font-size: 14px;
+    line-height: 1.7;
     margin-bottom: 23px;
   }
   .form-intro span {
@@ -86,11 +90,12 @@
   }
   .form-field label {
     display: block;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
     margin-bottom: 8px;
   }
   .form-field input {
-    height: 46px;
+    height: 48px;
     padding: 10px 12px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
@@ -105,7 +110,7 @@
     border-color: var(--error);
   }
   .field-error {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
     color: var(--error);
     margin-top: 6px;
@@ -114,7 +119,8 @@
     background: var(--rose-soft);
     padding: 15px 16px;
     margin-top: 24px;
-    font-size: 12px;
+    border-radius: 12px;
+    font-size: 13px;
   }
   .payment-note-label {
     display: flex;
@@ -165,26 +171,33 @@
     margin: 18px 0 0;
   }
   .amount-summary > div {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) fit-content(50%);
     justify-content: space-between;
     gap: 18px;
     margin: 12px 0;
     font-size: 12px;
     align-items: baseline;
+    min-width: 0;
   }
   .amount-summary dt {
+    min-width: 0;
+    overflow-wrap: anywhere;
     color: var(--muted);
   }
   .amount-summary dt > span {
     font-size: 10px;
   }
   .amount-summary dd {
+    font-variant-numeric: tabular-nums;
+    flex: 0 1 auto;
     margin: 0;
     min-width: 0;
     overflow-wrap: anywhere;
     text-align: right;
   }
   .amount-summary .amount-total {
+    grid-template-columns: auto minmax(0, 1fr);
     border-top: 1px solid var(--line);
     padding-top: 21px;
     margin-top: 20px;

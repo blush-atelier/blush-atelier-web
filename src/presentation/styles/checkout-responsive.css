@@ -10,7 +10,7 @@
       padding: 28px 30px 22px;
     }
     .dialog-header h2 {
-      font-size: 39px;
+      font-size: 32px;
     }
     .dialog-body {
       padding: 26px 30px 30px;
@@ -93,7 +93,7 @@
   }
   @media (max-width: 359px) {
     .dialog-header h2 {
-      font-size: 28px;
+      font-size: 24px;
     }
     .checkout-steps {
       gap: 15px;

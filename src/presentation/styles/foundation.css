@@ -82,7 +82,7 @@
     --serif: 'Montserrat', Arial, sans-serif;
     --sans: 'Montserrat', Arial, sans-serif;
     --shadow: 0 12px 36px #45312e0d;
-    --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --ease: cubic-bezier(0.23, 1, 0.32, 1);
     --duration: 220ms;
   }
   body {
@@ -92,6 +92,8 @@
     font-size: 15px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    caret-color: var(--rose);
+    scrollbar-color: #cdb6ac var(--paper);
     min-width: 280px;
   }
   button {
@@ -125,13 +127,15 @@
     font-family: var(--serif);
     font-weight: 500;
     line-height: 1.15;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
   }
   main {
     min-height: 50vh;
   }
   .section-wrap {
     width: min(1240px, calc(100% - 40px));
+    min-width: 0;
     margin-inline: auto;
   }
   .eyebrow {
@@ -184,6 +188,8 @@
     font-weight: 600;
     line-height: 1.4;
     text-align: center;
+    white-space: normal;
+    text-wrap: balance;
   }
   .button--dark {
     background: var(--cocoa);
@@ -195,8 +201,15 @@
     background: var(--white);
     color: var(--cocoa);
   }
-  .button:active:not(:disabled) {
-    transform: scale(0.98);
+  .button .icon,
+  .text-button .icon,
+  .round-link .icon {
+    flex: none;
+  }
+  .button:focus-visible,
+  .icon-button:focus-visible,
+  .text-button:focus-visible {
+    outline-offset: 3px;
   }
   .text-button {
     display: inline-flex;
@@ -255,7 +268,7 @@
   .skip-link:focus {
     top: 10px;
   }
-  @media (hover: hover) {
+  @media (hover: hover) and (pointer: fine) {
     .button--dark:hover:not(:disabled) {
       background: #2f211f;
       box-shadow: 0 8px 20px #45312e24;

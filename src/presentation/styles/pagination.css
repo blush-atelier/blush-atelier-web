@@ -54,7 +54,7 @@
     background: var(--rose-soft);
     border-color: #cdb6ac;
   }
-  .pagination-button:active:not(:disabled) {
+  .pagination-button:active:not(:disabled):not(:focus-visible) {
     transform: scale(0.96);
   }
 }

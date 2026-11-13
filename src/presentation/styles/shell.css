@@ -16,8 +16,8 @@
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
-    min-height: 92px;
-    width: min(1360px, calc(100% - 40px));
+    min-height: 80px;
+    width: min(1240px, calc(100% - 40px));
     margin: auto;
     border-bottom: 1px solid var(--line);
     background: var(--paper);
@@ -124,7 +124,7 @@
   }
   .site-footer {
     background: var(--blush);
-    padding: 38px 24px 102px;
+    padding: 38px 24px calc(102px + env(safe-area-inset-bottom));
     display: grid;
     gap: 26px;
     margin-top: 24px;
@@ -172,7 +172,7 @@
       margin-left: 6px;
     }
     .site-header {
-      width: min(1360px, calc(100% - 72px));
+      width: min(1240px, calc(100% - 72px));
     }
     .site-footer {
       grid-template-columns: 1fr 1fr;

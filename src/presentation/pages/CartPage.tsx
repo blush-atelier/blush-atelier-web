@@ -78,7 +78,6 @@ export function CartPage() {
   return (
     <section className="section-wrap cart-page">
       <div className="cart-heading">
-        <p className="eyebrow">01 / TU CARRITO</p>
         <h1 tabIndex={-1}>Tu próximo ritual.</h1>
         <p>Revisa tu elección antes de contarnos a dónde llegará.</p>
       </div>
@@ -181,7 +180,6 @@ export function CartPage() {
             </Link>
           </div>
           <aside className="cart-totals">
-            <p className="eyebrow">TU SELECCIÓN, CON CALMA</p>
             <h2>Resumen del carrito</h2>
             <dl>
               <div>

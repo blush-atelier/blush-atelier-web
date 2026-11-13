@@ -108,7 +108,7 @@
     padding-top: 4px;
   }
   .order-timeline p {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--muted);
     margin-top: 5px;
     line-height: 1.8;
@@ -125,6 +125,7 @@
     background: var(--white);
     border: 1px solid var(--line);
     padding: 24px 20px;
+    border-radius: 16px;
   }
   .order-product {
     display: flex;
@@ -138,7 +139,12 @@
     aspect-ratio: 4/5;
   }
   .order-product h2 {
-    font-size: 23px;
+    font-size: 19px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .order-product > div:last-child {
+    min-width: 0;
   }
   .order-product p {
     font-size: 11px;

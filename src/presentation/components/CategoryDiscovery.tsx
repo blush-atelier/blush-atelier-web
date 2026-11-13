@@ -23,12 +23,8 @@ export function CategoryDiscovery({
     >
       <div className="discovery-heading">
         <div>
-          <p className="eyebrow">ELIGE TU MOMENTO</p>
           <h2 id="discover-title">Un ritual, muchas formas.</h2>
         </div>
-        <span className="atelier-flower" aria-hidden="true">
-          ✳
-        </span>
       </div>
       <div className="category-discovery-grid">
         {edits.map((edit) => {
