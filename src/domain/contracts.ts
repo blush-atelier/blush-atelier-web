@@ -33,7 +33,12 @@ export interface Product {
   currency: 'COP';
   availableStock: number;
 }
+export interface CartItem {
+  productId: string;
+  quantity: number;
+}
 export interface Quote {
+  items?: (CartItem & { unitPriceMinor: string; productAmountMinor: string })[];
   productId: string;
   quantity: number;
   currency: 'COP';
@@ -71,6 +76,7 @@ export interface CheckoutForm extends CustomerInput {
   region: string;
 }
 export interface QuoteInput {
+  items?: CartItem[];
   productId: string;
   quantity: number;
   deliveryId: string;
@@ -92,6 +98,7 @@ export interface CheckoutApi {
 }
 export interface SafeProgress {
   version: 1;
+  items?: CartItem[];
   productId: string;
   quantity: number;
   deliveryId: string | null;
@@ -110,7 +117,6 @@ export interface RuntimePort {
 
 export type CartError =
   | 'CheckoutLocked'
-  | 'DifferentProduct'
   | 'InsufficientStock'
   | 'ProductNotFound'
   | 'InvalidQuantity';

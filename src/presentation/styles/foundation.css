@@ -59,6 +59,13 @@
   }
 }
 @layer base {
+  @font-face {
+    font-family: 'Montserrat';
+    src: url('/fonts/montserrat-latin.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
   :root {
     --paper: #fcf9f6;
     --white: #fff;
@@ -72,8 +79,8 @@
     --sage: #627258;
     --error: #9a333b;
     --radius: 14px;
-    --serif: Georgia, 'Times New Roman', serif;
-    --sans: Arial, Helvetica, sans-serif;
+    --serif: 'Montserrat', Arial, sans-serif;
+    --sans: 'Montserrat', Arial, sans-serif;
     --shadow: 0 12px 36px #45312e0d;
     --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
     --duration: 220ms;
@@ -116,8 +123,8 @@
   h1,
   h2 {
     font-family: var(--serif);
-    font-weight: 400;
-    line-height: 1.1;
+    font-weight: 500;
+    line-height: 1.15;
     letter-spacing: -0.035em;
   }
   main {

@@ -8,6 +8,7 @@ import type {
 } from '../domain/contracts';
 export interface CheckoutState {
   productId: string | null;
+  items: { productId: string; quantity: number }[];
   quantity: number;
   deliveryId: string | null;
   transactionId: string | null;
@@ -34,6 +35,7 @@ export interface AppState {
 export function emptyCheckout(): CheckoutState {
   return {
     productId: null,
+    items: [],
     quantity: 1,
     deliveryId: null,
     transactionId: null,
@@ -51,6 +53,9 @@ export function initialState(progress: SafeProgress | null = null): AppState {
   const checkout = emptyCheckout();
   if (progress)
     Object.assign(checkout, progress, {
+      items: progress.items ?? [
+        { productId: progress.productId, quantity: progress.quantity },
+      ],
       step: progress.transactionId
         ? 'result'
         : progress.deliveryId
@@ -113,14 +118,28 @@ const slice = createSlice({
       state.checkout = {
         ...emptyCheckout(),
         ...action.payload,
+        items: [action.payload],
         step: 'details',
       };
     },
     cartStored(
       state,
-      action: PayloadAction<{ productId: string; quantity: number }>,
+      action: PayloadAction<{
+        productId: string;
+        quantity: number;
+        items?: { productId: string; quantity: number }[];
+      }>,
     ) {
-      state.checkout = { ...emptyCheckout(), ...action.payload };
+      state.checkout = {
+        ...emptyCheckout(),
+        ...action.payload,
+        items: action.payload.items ?? [
+          {
+            productId: action.payload.productId,
+            quantity: action.payload.quantity,
+          },
+        ],
+      };
     },
     cartDetailsRequested(state) {
       if (
@@ -200,6 +219,14 @@ export function safeProgress(state: AppState): SafeProgress | null {
   if (!value.productId) return null;
   return {
     version: 1,
+    ...(value.items.length > 1
+      ? {
+          items: value.items.map(({ productId, quantity }) => ({
+            productId,
+            quantity,
+          })),
+        }
+      : {}),
     productId: value.productId,
     quantity: value.quantity,
     deliveryId: value.deliveryId,

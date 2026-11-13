@@ -166,8 +166,17 @@ ramas. Los commits son locales; publicar y promover se revisará aparte.
 ## Evidencia de carrito y Backdrop
 
 - [x] Agregar al carrito abre revisión previa a entrega; modificar/eliminar sin reservar stock.
-- [x] Un producto, varias unidades; reemplazo con confirmación y recuperación tras F5.
+- [x] Varios productos, cantidades independientes, eliminación por línea y recuperación tras F5.
 - [x] Resumen visual con capa posterior de producto y frontal con desglose y acción.
 - [x] Solicitudes pendientes/inciertas bloquean cambios y conservan idempotencia.
 - [x] 91 pruebas Jest; carrito y resumen revisados en Chrome a 320–1920 px.
 - [ ] Completar tarjeta/tokenización y botón de pago Sandbox exigidos por PDF.
+
+## Carrito e-commerce y tipografía
+
+- [x] Agregar productos distintos conserva toda la selección; repetir producto acumula unidades.
+- [x] Resumen/Backdrop y pedido muestran todas las líneas; una sola reserva de backend.
+- [x] F5 y timeout conservan referencias, cantidades y la misma clave de reintento.
+- [x] Montserrat local con licencia OFL, sin librerías nuevas ni solicitudes a Google en ejecución.
+- [x] Animaciones móviles y reducción de movimiento comprobadas en Chrome emulado.
+- [x] Jest: 94 pruebas; cobertura medida actual en README.

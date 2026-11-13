@@ -122,7 +122,7 @@ Pregunta de entrevista: ¿por qué filtrar antes de paginar? Para que el total y
 
 Se revisó el PDF facilitado como referencia de requisitos, especialmente páginas 2–4: compra de un producto concreto, modal de tarjeta/entrega y resumen con producto, tarifa base y envío en un Backdrop. El documento no se incorpora al repositorio porque contiene datos de acceso. Sus instrucciones operativas no se ejecutaron; no se inició sesión ni se configuraron claves. La tarjeta y el pago Wompi siguen pendientes y el botón actual confirma una reserva, no un pago.
 
-Flujo visual: producto → Agregar al carrito → revisar/cambiar unidades → entrega → resumen en dos capas → PENDING. El carrito mantiene un producto y varias unidades, coherente con el contrato actual del backend. No se simula un carrito multiproducto que el servidor no pueda procesar. Elegir otra referencia abre confirmación antes de reemplazar la anterior.
+Flujo visual: producto → Agregar al carrito → revisar/cambiar unidades → entrega → resumen en dos capas → PENDING. En el primer ciclo el carrito mantenía un producto y varias unidades (ampliado a varios productos en el ciclo siguiente). No se simula un carrito multiproducto que el servidor no pueda procesar. Elegir otra referencia abre confirmación antes de reemplazar la anterior.
 
 `addToCart`, `updateCartQuantity`, `removeFromCart` y `beginCartCheckout` son casos de uso de aplicación: devuelven Result/boolean controlados, validan cantidad/disponibilidad y bloquean modificaciones si una reserva está en curso o su respuesta es incierta. Agregar/eliminar/cambiar carrito no registra cliente, entrega o reserva. Editar cantidad invalida cotización, entrega y clave anteriores. Si baja el stock, se permite reducir la cantidad progresivamente aunque todavía supere el stock; continuar queda bloqueado hasta corregirla.
 
@@ -137,3 +137,25 @@ CSS: cart.css y summary-backdrop.css, tokens existentes, controles táctiles, Gr
 Verificación local: 91 pruebas Jest, 8 suites; métricas en README. Chrome en 320/375/430/600/768/900/1024/1440/1920 px: carrito vacío/con contenido, subtotal, formulario, backdrop desplegado/plegado sin overflow; confirmación/reemplazo, eliminar, F5, privacidad y bloqueo de cambios comprobados. Una prueba real agregó 2 unidades del labial Atenea: agregar no alteró disponibilidad; confirmar creó una reserva PENDING de exactamente 2 unidades, sin pagos. La reserva temporal sigue la política normal de vencimiento. Backend y AWS no se modificaron.
 
 Preguntas: ¿por qué un carrito local no reserva stock? Para no bloquear unidades por explorar. ¿Qué ocurre con una respuesta incierta? Se conserva la identidad de la solicitud y se consulta/reintenta, sin modificarla. ¿Por qué subtotal y cotización son distintos? El primero orienta usando catálogo; la cotización del servidor añade tarifas y verifica precio/stock. ¿Por qué un producto? Es el flujo del PDF y el contrato implementado; múltiples líneas requerirían ampliar el modelo y la reserva atómica de todos los productos.
+
+## Carrito e-commerce, Montserrat y móvil
+
+El carrito conserva un array de referencias/cantidades. Agregar el mismo producto
+acumula unidades; otro producto agrega una línea. Cambiar o quitar una línea invalida
+la cotización previa. prepareCheckout/reserveCheckout envían el conjunto al backend,
+que calcula importes y reserva todo o nada. El resumen/Backdrop y el pedido muestran
+cada producto. No se simulan varios pedidos desde el frontend.
+
+Se mantiene el formato seguro anterior añadiendo items solo cuando hay varias líneas;
+las compras anteriores siguen rehidratándose. No cambian las claves ni el payload de
+una solicitud incierta tras F5. Contacto, dirección y tarjetas no se persisten.
+
+Montserrat variable Latin (37.956 bytes) se sirve desde public/fonts con font-display
+swap y preload; fuente Google Fonts, licencia OFL incluida. No se añadieron librerías.
+Los contadores se animan al cambiar y las filas entran suavemente. En móvil hay
+respuesta al toque y animación de navegación/modal; reducir movimiento desactiva todo.
+
+Verificado en Chrome emulado a 320/375/430/600/768/900/1024/1440/1920 px: catálogo,
+detalle, carrito múltiple, entrega, Backdrop y pedido sin desbordamiento horizontal.
+Reserva real local de dos productos (1 y 2 unidades), una transacción, F5 y sin datos
+personales en localStorage. Esto no prueba todos los navegadores ni el pago Sandbox.

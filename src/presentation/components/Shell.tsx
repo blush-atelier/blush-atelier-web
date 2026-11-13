@@ -16,7 +16,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const { pathname, hash } = useLocation();
   const quantity = useAppSelector((state) =>
     state.checkout.productId && !state.checkout.transactionId
-      ? state.checkout.quantity
+      ? state.checkout.items.reduce((sum, i) => sum + i.quantity, 0)
       : 0,
   );
   useEffect(() => {
@@ -74,6 +74,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           {quantity > 0 && (
             <span
               className="selection-count"
+              key={quantity}
               aria-label={`${quantity} ${quantity === 1 ? 'unidad' : 'unidades'} en el carrito`}
             >
               {quantity}

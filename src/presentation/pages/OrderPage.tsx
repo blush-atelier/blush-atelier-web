@@ -130,7 +130,9 @@ export function OrderPage() {
       </section>
     );
   const content = statuses[transaction.status];
-  const product = products.find((value) => value.id === transaction.productId);
+  const items = transaction.items ?? [
+    { productId: transaction.productId, quantity: transaction.quantity },
+  ];
   const until = new Intl.DateTimeFormat('es-CO', {
     hour: '2-digit',
     minute: '2-digit',
@@ -263,15 +265,20 @@ export function OrderPage() {
         </div>
         <aside className="order-summary">
           <p className="eyebrow">TU SELECCIÓN</p>
-          {product && (
-            <div className="order-product">
-              <ProductArt product={product} />
-              <div>
-                <h2>{product.name}</h2>
-                <p>Cantidad: {transaction.quantity}</p>
-              </div>
-            </div>
-          )}
+          {items.map((item) => {
+            const product = products.find((p) => p.id === item.productId);
+            return (
+              product && (
+                <div className="order-product" key={item.productId}>
+                  <ProductArt product={product} />
+                  <div>
+                    <h2>{product.name}</h2>
+                    <p>Cantidad: {item.quantity}</p>
+                  </div>
+                </div>
+              )
+            );
+          })}
           <OrderSummary quote={transaction} />
           <p className="safe-note">
             Importes del pedido registrado. En esta etapa no se solicitan datos

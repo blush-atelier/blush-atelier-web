@@ -58,6 +58,52 @@
     opacity: 1;
     transform: translateY(0);
   }
+  @keyframes count-pop {
+    0% {
+      transform: scale(0.75);
+    }
+    60% {
+      transform: scale(1.14);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  .cart-item {
+    animation: soft-enter 320ms var(--ease) both;
+  }
+  .cart-item:nth-child(2) {
+    animation-delay: 45ms;
+  }
+  .cart-item:nth-child(3) {
+    animation-delay: 90ms;
+  }
+  .selection-count {
+    animation: count-pop 280ms var(--ease) both;
+  }
+  .quantity-control output {
+    animation: count-pop 180ms var(--ease) both;
+  }
+  @media (max-width: 599px) {
+    .checkout-dialog[open] {
+      animation: soft-enter 300ms var(--ease) both;
+    }
+    .button:active,
+    .quantity-control button:active {
+      transform: scale(0.96);
+    }
+    .mobile-nav a {
+      transition:
+        color 180ms ease,
+        transform 180ms var(--ease);
+    }
+    .mobile-nav a:active {
+      transform: translateY(-3px);
+    }
+    .mobile-nav a.is-active .icon {
+      animation: count-pop 280ms var(--ease) both;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;

@@ -84,6 +84,15 @@ export function CheckoutDialog() {
       state.products.find((value) => value.id === state.checkout.productId) ||
       (state.detail?.id === state.checkout.productId ? state.detail : null),
   );
+  const products = useAppSelector((state) => state.products);
+  const detail = useAppSelector((state) => state.detail);
+  const selection = checkout.items.map((i) => ({
+    quantity: i.quantity,
+    product:
+      detail?.id === i.productId
+        ? detail
+        : products.find((p) => p.id === i.productId),
+  }));
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -180,25 +189,30 @@ export function CheckoutDialog() {
               <br />
               <span>Entrega en Colombia.</span>
             </p>
-            {product && (
-              <div className="checkout-selection">
-                <ProductArt product={product} />
-                <div>
-                  <strong>{product.name}</strong>
-                  <p>Cantidad: {checkout.quantity}</p>
-                  <button
-                    type="button"
-                    className="text-button"
-                    disabled={busy}
-                    onClick={() => {
-                      dispatch(actions.checkoutClosed());
-                      navigate('/carrito');
-                    }}
-                  >
-                    Revisar carrito
-                  </button>
-                </div>
-              </div>
+            {selection.map(
+              ({ product, quantity }, index) =>
+                product && (
+                  <div className="checkout-selection" key={product.id}>
+                    <ProductArt product={product} />
+                    <div>
+                      <strong>{product.name}</strong>
+                      <p>Cantidad: {quantity}</p>
+                      {index === 0 && (
+                        <button
+                          type="button"
+                          className="text-button"
+                          disabled={busy}
+                          onClick={() => {
+                            dispatch(actions.checkoutClosed());
+                            navigate('/carrito');
+                          }}
+                        >
+                          Revisar carrito
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ),
             )}
             <fieldset disabled={busy}>
               <legend className="sr-only">Contacto y dirección</legend>
@@ -266,7 +280,11 @@ export function CheckoutDialog() {
             </div>
           </form>
         ) : checkout.quote ? (
-          <SummaryBackdrop product={product} quantity={checkout.quote.quantity}>
+          <SummaryBackdrop
+            product={product}
+            quantity={checkout.items.reduce((sum, i) => sum + i.quantity, 0)}
+            items={selection}
+          >
             <div className="review-delivery">
               {form.fullName ? (
                 <div className="delivery-preview">

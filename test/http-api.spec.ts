@@ -7,6 +7,7 @@ import {
 import {
   product,
   productId,
+  otherId,
   quote,
   transaction,
   transactionId,
@@ -171,5 +172,57 @@ it('rechaza contratos incompletos o importes inválidos antes de mostrarlos', ()
   expect(isTransaction({ ...transaction, status: 'FAKE_PAID' })).toBe(false);
   expect(isTransaction({ ...transaction, reservationExpiresAt: 'wrong' })).toBe(
     false,
+  );
+});
+
+it('valida cada importe del carrito y proyecta las líneas sin datos privados', async () => {
+  const items = [
+    {
+      productId,
+      quantity: 1,
+      unitPriceMinor: '8990000',
+      productAmountMinor: '8990000',
+    },
+    {
+      productId: otherId,
+      quantity: 1,
+      unitPriceMinor: '5990000',
+      productAmountMinor: '5990000',
+    },
+  ];
+  const basket = {
+    ...quote,
+    items,
+    productAmountMinor: '14980000',
+    totalMinor: '16480000',
+  };
+  expect(isQuote(basket)).toBe(true);
+  for (const invalid of [
+    [],
+    [null, null],
+    [items[0], items[0]],
+    [items[0], { ...items[1], quantity: 0 }],
+    [items[0], { ...items[1], productAmountMinor: '1' }],
+  ])
+    expect(isQuote({ ...basket, items: invalid })).toBe(false);
+  expect(isQuote({ ...basket, productAmountMinor: '1' })).toBe(false);
+  const fetcher = jest.fn().mockResolvedValue(
+    response({
+      ...basket,
+      items: items.map((i) => ({ ...i, private: 'PRIVATE' })),
+    }),
+  );
+  const api = createHttpApi('', fetcher);
+  const input = { productId, quantity: 1, items, deliveryId };
+  expect(await api.quote(input)).toEqual({ ok: true, value: basket });
+  expect(fetcher.mock.calls[0][1].body).not.toContain('unitPriceMinor');
+  fetcher.mockResolvedValue(response({ ...transaction, ...basket }));
+  const result = await api.createPending(
+    { ...input, expectedTotalMinor: basket.totalMinor },
+    'basket-request',
+  );
+  expect(result).toMatchObject({ ok: true, value: { items } });
+  expect(JSON.parse(fetcher.mock.calls[1][1].body).items).toEqual(
+    items.map(({ productId, quantity }) => ({ productId, quantity })),
   );
 });
