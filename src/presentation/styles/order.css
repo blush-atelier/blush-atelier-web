@@ -1,0 +1,167 @@
+@layer components {
+  .order-page {
+    padding-block: 48px 65px;
+  }
+  .order-intro {
+    max-width: 700px;
+    margin-bottom: 35px;
+  }
+  .order-intro h1 {
+    font-size: 46px;
+    line-height: 1.08;
+    margin: 18px 0;
+  }
+  .order-intro > p:last-child {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.9;
+    max-width: 520px;
+  }
+  .empty-order {
+    display: grid;
+    gap: 18px;
+    justify-items: start;
+    padding: 22px 0;
+  }
+  .empty-order > p {
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 500px;
+  }
+  .order-layout {
+    display: grid;
+    gap: 38px;
+  }
+  .reference-block {
+    padding: 24px 0 20px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .reference {
+    font-family: monospace;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    line-height: 1.8;
+    margin-top: 10px;
+  }
+  .copy-status {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    min-height: 16px;
+  }
+  .order-timeline {
+    list-style: none;
+    padding: 0;
+    margin: 32px 0;
+  }
+  .order-timeline li {
+    position: relative;
+    display: flex;
+    gap: 18px;
+    padding-bottom: 30px;
+    color: var(--muted);
+  }
+  .order-timeline li:not(:last-child)::before {
+    position: absolute;
+    content: '';
+    top: 28px;
+    left: 13px;
+    bottom: 0;
+    border-left: 1px solid var(--line);
+  }
+  .timeline-dot {
+    height: 28px;
+    width: 28px;
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 9px;
+    flex: none;
+    background: var(--paper);
+    z-index: 1;
+  }
+  .timeline-dot .icon {
+    width: 13px;
+    height: 13px;
+  }
+  .order-timeline .is-complete,
+  .order-timeline .is-current {
+    color: var(--ink);
+  }
+  .order-timeline .is-complete .timeline-dot {
+    color: var(--white);
+    background: var(--cocoa);
+    border-color: var(--cocoa);
+  }
+  .order-timeline .is-current .timeline-dot {
+    border-color: var(--rose);
+    color: var(--rose);
+  }
+  .order-timeline h2 {
+    font-family: var(--sans);
+    font-size: 13px;
+    letter-spacing: 0;
+    font-weight: 500;
+    line-height: 1.4;
+    padding-top: 4px;
+  }
+  .order-timeline p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+    line-height: 1.8;
+    max-width: 430px;
+  }
+  .order-buttons {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .order-summary {
+    align-self: start;
+    background: var(--white);
+    border: 1px solid var(--line);
+    padding: 24px 20px;
+  }
+  .order-product {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin: 20px 0 25px;
+  }
+  .order-product .product-art {
+    width: 80px;
+    flex: none;
+    aspect-ratio: 4/5;
+  }
+  .order-product h2 {
+    font-size: 23px;
+  }
+  .order-product p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 7px;
+  }
+  .art-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100%;
+    min-height: 150px;
+    color: var(--cocoa);
+  }
+  .art-fallback > span {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 44px;
+    letter-spacing: -4px;
+  }
+  .art-fallback small {
+    font-size: 8px;
+    letter-spacing: 4px;
+  }
+}

@@ -1,0 +1,12 @@
+@layer reset, base, components, responsive, motion;
+@import './styles/foundation.css';
+@import './styles/shell.css';
+@import './styles/catalogue.css';
+@import './styles/product.css';
+@import './styles/feedback.css';
+@import './styles/checkout.css';
+@import './styles/order.css';
+@import './styles/checkout-responsive.css';
+@import './styles/motion.css';
+@import './styles/discovery.css';
+@import './styles/pagination.css';

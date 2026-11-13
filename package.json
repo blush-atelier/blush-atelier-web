@@ -1,0 +1,46 @@
+{
+  "name": "blush-atelier-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13 <23"
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test",
+    "format": "prettier --write src test docs README.md *.json *.cjs *.ts .github/workflows/*.yml",
+    "format:check": "prettier --check src test docs README.md *.json *.cjs *.ts .github/workflows/*.yml",
+    "test": "jest --runInBand",
+    "test:cov": "jest --runInBand --coverage",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-redux": "^9.2.0",
+    "@reduxjs/toolkit": "^2.0.0",
+    "react-router-dom": "^7.0.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vite": "^7.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/node": "^22.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "@types/jest": "^29.5.14",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/user-event": "^14.0.0",
+    "eslint": "^10.0.0",
+    "@eslint/js": "^10.0.0",
+    "typescript-eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  }
+}
