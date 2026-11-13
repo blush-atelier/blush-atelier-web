@@ -159,3 +159,56 @@ Verificado en Chrome emulado a 320/375/430/600/768/900/1024/1440/1920 px: catál
 detalle, carrito múltiple, entrega, Backdrop y pedido sin desbordamiento horizontal.
 Reserva real local de dos productos (1 y 2 unidades), una transacción, F5 y sin datos
 personales en localStorage. Esto no prueba todos los navegadores ni el pago Sandbox.
+
+## Revisión responsive y accesible con skills
+
+Se aplicaron Impeccable, Design Taste Frontend y Emil Design Engineering sobre la
+identidad existente: Montserrat, beige/blush/cocoa y fotografías del catálogo. No se
+cambiaron Redux, contratos HTTP, dinero, reglas de stock ni el flujo de reserva.
+
+Se compactaron hero/cabecera, formularios y controles; los filtros muestran etiquetas
+y su opción completa. El detalle usa dos columnas desde tablet; el resumen conserva
+los importes legibles y el formulario agrupa las miniaturas en escritorio. Los
+botones responden al toque sin rebotes repetitivos. Se retiró el observer de aparición
+en scroll y sus tres tests obsoletos: el catálogo siempre está visible. Se añadió un
+test de regresión para el scroll del modal al pasar entrega → resumen → entrega.
+
+| Tamaño CSS  | Catálogo/detalle/carrito | Entrega/validación/Backdrop | Reserva PENDING y F5 |
+| ----------- | ------------------------ | --------------------------- | -------------------- |
+| 320 × 568   | Verificado               | Verificado                  | Verificado           |
+| 375 × 667   | Verificado               | Verificado                  | Verificado           |
+| 390 × 844   | Verificado               | Verificado                  | Verificado           |
+| 430 × 932   | Verificado               | Verificado                  | Verificado           |
+| 768 × 1024  | Verificado               | Verificado                  | Verificado           |
+| 1024 × 768  | Verificado               | Verificado                  | Verificado           |
+| 1280 × 800  | Verificado               | Verificado                  | Verificado           |
+| 1440 × 900  | Verificado               | Verificado                  | Verificado           |
+| 1920 × 1080 | Verificado               | Verificado                  | Verificado           |
+
+Evidencia: build de Vite servido localmente; Chrome de Windows mediante CDP desde WSL,
+viewports emulados, capturas y mediciones DOM. API simulada con datos del seed y los
+contratos actuales; no se realizaron reservas reales ni pagos. Se probaron tap
+sintético, filtros, validación, cierre con Escape, navegación por Tab y recuperación.
+En los nueve tamaños no se detectó overflow horizontal, modales fuera del viewport,
+controles de menos de 44 px de alto ni opciones seleccionadas recortadas. Scroll
+vertical e imágenes lazy son intencionales; una captura de viewport no muestra todo
+el formulario de una vez.
+
+APPROVED, DECLINED, ERROR y EXPIRED se comprobaron con respuestas simuladas a 320×568,
+390×844 y 1440×900. No son evidencia de integración Wompi. El pago con tarjeta sigue
+pendiente: no se añadieron campos PAN/CVV a una UI sin tokenización.
+
+Axe (WCAG 2 A/AA y 2.1 AA): cero infracciones detectadas en catálogo, detalle, entrega,
+resumen y reserva a 320 y 1440 px. No sustituye revisión con lector de pantalla.
+No se probaron Safari, Firefox, dispositivos físicos ni teclado virtual de iOS/Android.
+
+Design Taste devolvió `GATE: ERROR`: sus scripts no encontraron Chrome/Edge/Chromium
+Linux y no pudieron comprobar copy/consistency/layout. No se reejecutó ni se declaró
+PASS. Se usó Chrome de Windows para las comprobaciones independientes anteriores.
+No se importó su plantilla de landing ni una paleta aleatoria: prevalecen el e-commerce
+existente, la referencia y el alcance indicado por la usuaria.
+
+Calidad local: npm run format:check, lint, typecheck, test:cov y build. Jest: 92 pruebas,
+7 suites; 97,81% sentencias, 96,32% ramas, 98,00% funciones, 97,73% líneas. Todas >80%.
+No hay dependencias nuevas de la aplicación; Playwright Core/axe se instalaron solo
+como herramientas temporales fuera del repositorio.

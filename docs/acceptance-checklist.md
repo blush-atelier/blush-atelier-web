@@ -180,3 +180,13 @@ ramas. Los commits son locales; publicar y promover se revisará aparte.
 - [x] Montserrat local con licencia OFL, sin librerías nuevas ni solicitudes a Google en ejecución.
 - [x] Animaciones móviles y reducción de movimiento comprobadas en Chrome emulado.
 - [x] Jest: 94 pruebas; cobertura medida actual en README.
+
+## Revisión responsive del frontend existente
+
+- [x] Catálogo, detalle, carrito múltiple, entrega/validación, Backdrop y PENDING/F5 en los nueve tamaños solicitados; matriz y límites en las notas.
+- [x] Sin overflow horizontal ni modales fuera del viewport; controles de al menos 44 px de alto y filtros sin recorte.
+- [x] Regresión del scroll entre pasos del modal cubierta con Jest.
+- [x] Axe sin infracciones detectadas en cinco pantallas a 320 y 1440 px; teclado y Escape revisados.
+- [x] Formato, lint, typecheck, build y 92 pruebas Jest correctos; cobertura actual en README.
+- [ ] Safari/Firefox, dispositivos físicos, lectores de pantalla y teclado virtual verificados.
+- [ ] Formulario de tarjeta y resultados reales de Wompi Sandbox (no implementados en esta revisión visual).
