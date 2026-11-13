@@ -107,3 +107,10 @@ export interface ProgressPort {
 export interface RuntimePort {
   newKey(): string;
 }
+
+export type CartError =
+  | 'CheckoutLocked'
+  | 'DifferentProduct'
+  | 'InsufficientStock'
+  | 'ProductNotFound'
+  | 'InvalidQuantity';

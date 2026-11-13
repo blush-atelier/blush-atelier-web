@@ -116,6 +116,23 @@ const slice = createSlice({
         step: 'details',
       };
     },
+    cartStored(
+      state,
+      action: PayloadAction<{ productId: string; quantity: number }>,
+    ) {
+      state.checkout = { ...emptyCheckout(), ...action.payload };
+    },
+    cartDetailsRequested(state) {
+      if (
+        state.checkout.phase === 'idle' &&
+        !state.checkout.attempted &&
+        !state.checkout.transactionId
+      )
+        state.checkout.step =
+          state.checkout.quote && state.checkout.deliveryId
+            ? 'review'
+            : 'details';
+    },
     checkoutClosed(state) {
       if (state.checkout.phase === 'idle') state.checkout.step = 'closed';
     },

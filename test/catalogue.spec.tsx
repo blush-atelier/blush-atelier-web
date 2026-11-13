@@ -124,7 +124,7 @@ test('restaura URL compartida, orden y página al volver desde detalle', async (
   await screen.findByRole('heading', { name: 'Producto 14' });
   expect(screen.getAllByRole('article')[0]).toHaveTextContent('Producto 14');
   await user.click(screen.getByRole('link', { name: 'Ver Producto 14' }));
-  await screen.findByRole('button', { name: 'Preparar mi pedido' });
+  await screen.findByRole('button', { name: 'Agregar al carrito' });
   const crumbs = screen.getByRole('navigation', { name: 'Ruta de navegación' });
   await user.click(within(crumbs).getByRole('link', { name: 'Colección' }));
   await screen.findByRole('heading', { name: 'Producto 14' });

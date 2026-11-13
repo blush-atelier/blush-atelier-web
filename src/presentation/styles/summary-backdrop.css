@@ -1,0 +1,160 @@
+@layer components {
+  .checkout-dialog[data-stage='review'] .dialog-body {
+    padding: 0;
+    background: var(--cocoa);
+  }
+  .summary-backdrop {
+    overflow: hidden;
+    background: var(--cocoa);
+  }
+  .summary-back-layer {
+    padding: 22px 20px 34px;
+    color: var(--white);
+  }
+  .backdrop-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+  }
+  .backdrop-bar .eyebrow {
+    color: #ead8d0;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+  }
+  .backdrop-bar p:last-child {
+    font-size: 13px;
+    margin-top: 5px;
+  }
+  .backdrop-bar button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #c2a69a;
+    border-radius: 12px;
+    padding: 10px;
+    min-height: 44px;
+    color: var(--white);
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: left;
+  }
+  .backdrop-bar .icon {
+    width: 15px;
+    height: 15px;
+  }
+  .backdrop-reveal {
+    display: grid;
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    transition:
+      grid-template-rows 280ms var(--ease),
+      visibility 280ms;
+  }
+  .backdrop-reveal.is-expanded {
+    grid-template-rows: 1fr;
+    visibility: visible;
+  }
+  .backdrop-reveal > div {
+    overflow: hidden;
+    min-height: 0;
+  }
+  .backdrop-product {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding-top: 22px;
+  }
+  .backdrop-product .product-art {
+    width: 85px;
+    flex: none;
+    border-radius: 12px;
+    aspect-ratio: 4/5;
+  }
+  .backdrop-product h3 {
+    font: 500 17px/1.5 var(--sans);
+    overflow-wrap: anywhere;
+  }
+  .backdrop-product p {
+    font-size: 12px;
+    color: #ead8d0;
+    margin-top: 6px;
+  }
+  .summary-front-layer {
+    position: relative;
+    padding: 23px 20px 28px;
+    border-radius: 24px 24px 0 0;
+    background: var(--white);
+    margin-top: -12px;
+    box-shadow: 0 -6px 20px #00000010;
+  }
+  .backdrop-handle {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 8px;
+    background: var(--line);
+    margin: 0 auto 22px;
+  }
+  .review-delivery {
+    padding-bottom: 19px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .review-delivery .delivery-preview {
+    margin: 0;
+  }
+  .review-delivery > .muted {
+    font-size: 12px;
+    max-width: 240px;
+  }
+  .review-delivery > .text-button {
+    font-size: 11px;
+    max-width: 130px;
+  }
+  .summary-front-layer .review-amounts {
+    border: 0;
+    padding: 24px 0 0;
+  }
+  .summary-front-layer .payment-note {
+    border-radius: 14px;
+  }
+  .summary-front-layer .review-amounts > .button {
+    min-height: 54px;
+  }
+  .summary-front-layer .amount-summary > div {
+    font-size: 13px;
+  }
+  .summary-front-layer .amount-summary .amount-total {
+    font-size: 26px;
+  }
+  .summary-front-layer .safe-note {
+    font-size: 11px;
+  }
+}
+@layer responsive {
+  @media (min-width: 600px) {
+    .checkout-dialog[data-stage='review'] .dialog-body {
+      padding: 0;
+    }
+    .summary-back-layer {
+      padding: 24px 30px 36px;
+    }
+    .summary-front-layer {
+      padding: 25px 30px 32px;
+    }
+    .backdrop-bar button {
+      font-size: 12px;
+    }
+    .summary-front-layer .review-amounts {
+      border: 0;
+      padding: 24px 0 0;
+    }
+    .summary-front-layer .review-delivery .text-button {
+      max-width: none;
+    }
+  }
+}

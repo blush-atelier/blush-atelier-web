@@ -34,21 +34,10 @@
     .dialog-actions > p {
       max-width: 230px;
     }
-    .review-grid {
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: 30px;
-    }
     .review-amounts {
       padding: 0 0 0 28px;
       border-top: 0;
       border-left: 1px solid var(--line);
-    }
-    .review-product .product-art {
-      aspect-ratio: 4/5;
-      max-height: none;
-    }
-    .review-product h3 {
-      font-size: 31px;
     }
     .order-intro h1 {
       font-size: 60px;

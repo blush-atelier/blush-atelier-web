@@ -1,4 +1,6 @@
 import type { ApiError, CheckoutForm, PendingInput } from '../domain/contracts';
+import type { CartError, Result } from '../domain/contracts';
+import type { CheckoutState } from './state';
 import type { AppThunk } from './store';
 import { actions } from './state';
 const unexpected: ApiError = { code: 'NetworkError', status: 0 };
@@ -193,4 +195,81 @@ export const resumeCheckout =
     if (current.attempted) return dispatch(reserveCheckout());
     if (current.deliveryId) return dispatch(refreshQuote());
     return false;
+  };
+
+function cartLocked(checkout: CheckoutState): boolean {
+  return (
+    checkout.phase !== 'idle' ||
+    (checkout.attempted && !checkout.transaction) ||
+    Boolean(
+      checkout.transactionId &&
+      (!checkout.transaction || checkout.transaction.status === 'PENDING'),
+    )
+  );
+}
+export const addToCart =
+  (
+    productId: string,
+    quantity: number,
+    replace = false,
+  ): AppThunk<Result<undefined, CartError>> =>
+  (dispatch, getState) => {
+    const state = getState();
+    const current = state.checkout;
+    if (cartLocked(current)) return { ok: false, error: 'CheckoutLocked' };
+    const product =
+      state.detail?.id === productId
+        ? state.detail
+        : state.products.find((value) => value.id === productId);
+    if (!product) return { ok: false, error: 'ProductNotFound' };
+    if (!Number.isSafeInteger(quantity) || quantity < 1)
+      return { ok: false, error: 'InvalidQuantity' };
+    const existing = current.transactionId ? null : current.productId;
+    if (existing && existing !== productId && !replace)
+      return { ok: false, error: 'DifferentProduct' };
+    const next =
+      existing === productId ? current.quantity + quantity : quantity;
+    if (next > product.availableStock)
+      return { ok: false, error: 'InsufficientStock' };
+    dispatch(actions.cartStored({ productId, quantity: next }));
+    return { ok: true, value: undefined };
+  };
+export const updateCartQuantity =
+  (quantity: number): AppThunk<Result<undefined, CartError>> =>
+  (dispatch, getState) => {
+    const state = getState();
+    const current = state.checkout;
+    if (cartLocked(current) || current.transactionId)
+      return { ok: false, error: 'CheckoutLocked' };
+    const product =
+      state.detail?.id === current.productId
+        ? state.detail
+        : state.products.find((value) => value.id === current.productId);
+    if (!product) return { ok: false, error: 'ProductNotFound' };
+    if (!Number.isSafeInteger(quantity) || quantity < 1)
+      return { ok: false, error: 'InvalidQuantity' };
+    if (quantity > product.availableStock && quantity >= current.quantity)
+      return { ok: false, error: 'InsufficientStock' };
+    // Cambiar cantidad invalida una cotización previa, no modifica una reserva existente.
+    dispatch(actions.cartStored({ productId: product.id, quantity }));
+    return { ok: true, value: undefined };
+  };
+export const removeFromCart = (): AppThunk<boolean> => (dispatch, getState) => {
+  const current = getState().checkout;
+  if (cartLocked(current) || current.transactionId) return false;
+  dispatch(actions.checkoutReset());
+  return true;
+};
+export const beginCartCheckout =
+  (): AppThunk<boolean> => (dispatch, getState) => {
+    const state = getState();
+    const current = state.checkout;
+    if (cartLocked(current) || current.transactionId) return false;
+    const product =
+      state.detail?.id === current.productId
+        ? state.detail
+        : state.products.find((value) => value.id === current.productId);
+    if (!product || current.quantity > product.availableStock) return false;
+    dispatch(actions.cartDetailsRequested());
+    return true;
   };

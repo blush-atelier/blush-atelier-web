@@ -153,3 +153,8 @@ export function errorMessage(error: ApiError | null): string {
       return 'No pudimos completar la solicitud. Inténtalo de nuevo.';
   }
 }
+
+// Es un subtotal orientativo del catálogo; la cotización del servidor confirma importes y tarifas.
+export function cartSubtotalMinor(product: Product, quantity: number): string {
+  return (BigInt(product.priceMinor) * BigInt(quantity)).toString();
+}

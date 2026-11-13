@@ -11,6 +11,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { Icon } from './Icon';
 import { ProductArt } from './ProductArt';
+import { SummaryBackdrop } from './SummaryBackdrop';
 import { OrderSummary } from './OrderSummary';
 import { ErrorNotice, Loading } from './Feedback';
 const blankForm: CheckoutForm = {
@@ -136,14 +137,15 @@ export function CheckoutDialog() {
         event.preventDefault();
         dispatch(actions.checkoutClosed());
       }}
+      data-stage={checkout.step}
     >
       <div className="dialog-header">
         <div>
-          <p className="eyebrow">TU SELECCIÓN ATELIER</p>
+          <p className="eyebrow">TU COMPRA ATELIER</p>
           <h2 ref={heading} id="checkout-title" tabIndex={-1}>
             {checkout.step === 'details'
               ? 'Tus datos y entrega.'
-              : 'Un último vistazo.'}
+              : 'Resumen de tu compra.'}
           </h2>
         </div>
         <button
@@ -155,12 +157,12 @@ export function CheckoutDialog() {
           <Icon name="close" />
         </button>
       </div>
-      <ol className="checkout-steps" aria-label="Pasos de tu selección">
+      <ol className="checkout-steps" aria-label="Pasos de tu compra">
         <li className="is-active">
           <span>
             {checkout.step === 'review' ? <Icon name="check" /> : '01'}
           </span>
-          Datos y entrega
+          Entrega
         </li>
         <li
           className={checkout.step === 'review' ? 'is-active' : ''}
@@ -174,10 +176,30 @@ export function CheckoutDialog() {
         {checkout.step === 'details' ? (
           <form onSubmit={submit} noValidate>
             <p className="form-intro">
-              Cuéntanos a dónde irá tu próximo esencial.
+              Tu selección está en el carrito. Ahora cuéntanos a dónde llegará.
               <br />
               <span>Entrega en Colombia.</span>
             </p>
+            {product && (
+              <div className="checkout-selection">
+                <ProductArt product={product} />
+                <div>
+                  <strong>{product.name}</strong>
+                  <p>Cantidad: {checkout.quantity}</p>
+                  <button
+                    type="button"
+                    className="text-button"
+                    disabled={busy}
+                    onClick={() => {
+                      dispatch(actions.checkoutClosed());
+                      navigate('/carrito');
+                    }}
+                  >
+                    Revisar carrito
+                  </button>
+                </div>
+              </div>
+            )}
             <fieldset disabled={busy}>
               <legend className="sr-only">Contacto y dirección</legend>
               <div className="checkout-fields">
@@ -244,15 +266,8 @@ export function CheckoutDialog() {
             </div>
           </form>
         ) : checkout.quote ? (
-          <div className="review-grid">
-            <div className="review-product">
-              {product && (
-                <>
-                  <ProductArt product={product} />
-                  <p className="eyebrow">TU ESENCIAL</p>
-                  <h3>{product.name}</h3>
-                </>
-              )}
+          <SummaryBackdrop product={product} quantity={checkout.quote.quantity}>
+            <div className="review-delivery">
               {form.fullName ? (
                 <div className="delivery-preview">
                   <h4>Entregar a</h4>
@@ -313,7 +328,7 @@ export function CheckoutDialog() {
                 necesitas reintentar.
               </p>
             </div>
-          </div>
+          </SummaryBackdrop>
         ) : (
           <div className="restore-summary">
             <Loading

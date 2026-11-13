@@ -6,6 +6,7 @@ import { Shell } from './components/Shell';
 import { CheckoutDialog } from './components/CheckoutDialog';
 import { CataloguePage } from './pages/CataloguePage';
 import { ProductPage } from './pages/ProductPage';
+import { CartPage } from './pages/CartPage';
 import { OrderPage } from './pages/OrderPage';
 import './styles.css';
 export function App() {
@@ -25,6 +26,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<CataloguePage />} />
         <Route path="/producto/:id" element={<ProductPage />} />
+        <Route path="/carrito" element={<CartPage />} />
         <Route path="/pedido" element={<OrderPage />} />
         <Route
           path="*"

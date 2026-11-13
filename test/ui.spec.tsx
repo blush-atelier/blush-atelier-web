@@ -42,8 +42,12 @@ function setup(
   return { api, store, persistence, user: userEvent.setup(), ...view };
 }
 async function openDetails(user: ReturnType<typeof userEvent.setup>) {
+  if (!screen.queryByRole('heading', { name: 'Tu próximo ritual.' }))
+    await user.click(
+      await screen.findByRole('button', { name: 'Agregar al carrito' }),
+    );
   await user.click(
-    await screen.findByRole('button', { name: 'Preparar mi pedido' }),
+    await screen.findByRole('button', { name: 'Continuar con la entrega' }),
   );
   return screen.getByRole('dialog');
 }
@@ -163,7 +167,7 @@ describe('UI conectada mediante los puertos', () => {
     expect(api.registerCustomer).not.toHaveBeenCalled();
     await fill(user);
     await user.click(screen.getByRole('button', { name: 'Revisar mi pedido' }));
-    await screen.findByRole('heading', { name: 'Un último vistazo.' });
+    await screen.findByRole('heading', { name: 'Resumen de tu compra.' });
     expect(dialog).toHaveTextContent(/\$\s104\.900/);
     expect(dialog).toHaveTextContent(form.addressLine);
     expect(JSON.stringify(store.getState())).not.toContain(form.email);
@@ -173,7 +177,7 @@ describe('UI conectada mediante los puertos', () => {
     );
     expect(screen.getByLabelText('Correo electrónico')).toHaveValue(form.email);
     await user.click(screen.getByRole('button', { name: 'Revisar mi pedido' }));
-    await screen.findByRole('heading', { name: 'Un último vistazo.' });
+    await screen.findByRole('heading', { name: 'Resumen de tu compra.' });
     await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }));
     await screen.findByRole('heading', { name: 'Tu selección te espera.' });
     expect(screen.getByText(transaction.reference)).toBeVisible();
@@ -244,7 +248,7 @@ describe('UI conectada mediante los puertos', () => {
     );
     const { user } = setup(`/producto/${productId}`, null, api);
     expect(
-      await screen.findByRole('button', { name: 'Preparar mi pedido' }),
+      await screen.findByRole('button', { name: 'Agregar al carrito' }),
     ).toBeDisabled();
     expect(screen.getByText('Sin existencias por ahora')).toBeVisible();
     await user.click(
@@ -416,7 +420,7 @@ describe('UI conectada mediante los puertos', () => {
       expect(store.getState().checkout.transaction?.id).toBe(transaction.id),
     );
     await user.click(
-      await screen.findByRole('button', { name: 'Preparar mi pedido' }),
+      await screen.findByRole('button', { name: 'Agregar al carrito' }),
     );
     await screen.findByRole('heading', { name: 'Tu selección te espera.' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

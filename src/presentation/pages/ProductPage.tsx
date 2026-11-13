@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
-import { loadProduct, openCheckout } from '../../application/operations';
+import { loadProduct, addToCart } from '../../application/operations';
 import { formatMoney, categoryOf, brandOf } from '../../domain/presentation';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { ProductArt } from '../components/ProductArt';
 import { Icon } from '../components/Icon';
+import { ReplaceCartDialog } from '../components/ReplaceCartDialog';
+import type { ApiError } from '../../domain/contracts';
 import { ErrorNotice, Loading } from '../components/Feedback';
 export function ProductPage() {
   const { id = '' } = useParams();
@@ -22,6 +24,8 @@ export function ProductPage() {
   const detailStatus = useAppSelector((state) => state.detailStatus);
   const detailError = useAppSelector((state) => state.detailError);
   const [quantity, setQuantity] = useState(1);
+  const [replace, setReplace] = useState(false);
+  const [cartError, setCartError] = useState<ApiError | null>(null);
   useEffect(() => {
     setQuantity(1);
     void dispatch(loadProduct(id));
@@ -46,11 +50,39 @@ export function ProductPage() {
         <Loading label="Preparando los detalles de tu selección…" />
       </div>
     );
-  const begin = () => {
-    if (!dispatch(openCheckout(product.id, quantity))) navigate('/pedido');
+  const begin = (replaceExisting = false) => {
+    const result = dispatch(addToCart(product.id, quantity, replaceExisting));
+    if (result.ok) {
+      setReplace(false);
+      navigate('/carrito');
+      return;
+    }
+    if (result.error === 'DifferentProduct') {
+      setReplace(true);
+      return;
+    }
+    if (result.error === 'CheckoutLocked') {
+      navigate('/pedido');
+      return;
+    }
+    setReplace(false);
+    setCartError({
+      code:
+        result.error === 'InsufficientStock'
+          ? 'InsufficientStock'
+          : 'InvalidInput',
+      status: 409,
+    });
   };
   return (
     <section className="section-wrap product-page">
+      {replace && (
+        <ReplaceCartDialog
+          onCancel={() => setReplace(false)}
+          onConfirm={() => begin(true)}
+        />
+      )}
+      <ErrorNotice error={cartError} />
       <nav className="breadcrumbs" aria-label="Ruta de navegación">
         <Link to={collectionUrl}>
           <Icon name="back" />
@@ -124,11 +156,11 @@ export function ProductPage() {
               disabled={
                 !product.availableStock || quantity > product.availableStock
               }
-              onClick={begin}
+              onClick={() => begin()}
             >
-              Preparar mi pedido <Icon name="arrow" />
+              Agregar al carrito <Icon name="arrow" />
             </button>
-            <p>Sin cobros · reserva temporal después de confirmar</p>
+            <p>Revisa tu carrito antes de completar la entrega</p>
           </div>
           <div className="detail-notes">
             <details open>

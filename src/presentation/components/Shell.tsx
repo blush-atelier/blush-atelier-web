@@ -14,8 +14,10 @@ export function Brand() {
 }
 export function Shell({ children }: { children: React.ReactNode }) {
   const { pathname, hash } = useLocation();
-  const selected = useAppSelector((state) =>
-    Boolean(state.checkout.transactionId || state.checkout.attempted),
+  const quantity = useAppSelector((state) =>
+    state.checkout.productId && !state.checkout.transactionId
+      ? state.checkout.quantity
+      : 0,
   );
   useEffect(() => {
     if (hash) {
@@ -61,19 +63,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
           >
             Cómo funciona
           </Link>
+          <NavLink to="/pedido">Mi pedido</NavLink>
         </nav>
         <Link to="/" className="brand-link" aria-label="Blush Atelier, inicio">
           <Brand />
         </Link>
-        <NavLink to="/pedido" className="order-link">
-          <span>Mi pedido</span>
+        <NavLink to="/carrito" className="order-link">
+          <span>Carrito</span>
           <Icon name="bag" />
-          {selected && (
+          {quantity > 0 && (
             <span
               className="selection-count"
-              aria-label="Una selección guardada"
+              aria-label={`${quantity} ${quantity === 1 ? 'unidad' : 'unidades'} en el carrito`}
             >
-              1
+              {quantity}
             </span>
           )}
         </NavLink>
@@ -108,6 +111,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
         >
           <Icon name="home" />
           <span>Colección</span>
+        </NavLink>
+        <NavLink to="/carrito">
+          <Icon name="bag" />
+          <span>Carrito</span>
         </NavLink>
         <NavLink to="/pedido">
           <Icon name="bag" />
