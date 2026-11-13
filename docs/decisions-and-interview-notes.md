@@ -294,3 +294,15 @@ pantalla y teclado virtual; captura/pago Wompi Sandbox y estados reales; validac
 AWS, HTTPS y URLs públicas. Las pruebas visuales anteriores usaron API simulada.
 No se incluyen instalaciones de skills, `.codex/` ni `skills-lock.json` en el commit.
 No se realiza push, merge ni despliegue.
+
+## Header de escritorio de borde a borde
+
+El header sticky heredaba el ancho máximo de 1240 px del contenido, dejando sus
+laterales sin fondo al desplazarse. Desde 1000 px ocupa el 100% del ancho disponible;
+el padding fluido mantiene los enlaces alineados con el catálogo. No cambia el header móvil.
+
+Verificado con Chrome y API simulada en catálogo, detalle, carrito y pedido a
+320, 375, 768, 1024, 1280, 1440 y 1920 px: sin overflow horizontal; el header de
+escritorio cubre todo el ancho y permanece arriba al hacer scroll. Inspección de la
+captura de catálogo a 1440 px. Formato, lint, typecheck, build y 99 pruebas Jest
+correctos; cobertura sin cambios. No acredita pagos ni despliegue.
