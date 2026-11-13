@@ -114,11 +114,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <span>Colección</span>
         </NavLink>
         <NavLink to="/carrito">
-          <Icon name="bag" />
+          <span className="mobile-cart-icon">
+            <Icon name="bag" />
+            {quantity > 0 && (
+              <span className="selection-count" aria-hidden="true">
+                {quantity}
+              </span>
+            )}
+          </span>
           <span>Carrito</span>
         </NavLink>
         <NavLink to="/pedido">
-          <Icon name="bag" />
+          <Icon name="receipt" />
           <span>Mi pedido</span>
         </NavLink>
         <Link
@@ -126,9 +133,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           className={hash === '#ayuda' ? 'is-active' : ''}
           aria-current={hash === '#ayuda' ? 'location' : undefined}
         >
-          <span className="help-symbol" aria-hidden="true">
-            ?
-          </span>
+          <Icon name="help" />
           <span>Ayuda</span>
         </Link>
       </nav>

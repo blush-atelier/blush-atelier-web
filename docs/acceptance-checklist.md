@@ -190,3 +190,19 @@ ramas. Los commits son locales; publicar y promover se revisará aparte.
 - [x] Formato, lint, typecheck, build y 92 pruebas Jest correctos; cobertura actual en README.
 - [ ] Safari/Firefox, dispositivos físicos, lectores de pantalla y teclado virtual verificados.
 - [ ] Formulario de tarjeta y resultados reales de Wompi Sandbox (no implementados en esta revisión visual).
+
+## Rediseño correctivo — controles y composición editorial
+
+- [x] AtelierSelect estilizado con portal, colisiones, scroll, check, teclado, búsqueda por letras, Escape y retorno de foco.
+- [x] Fondo no enfocable mientras el menú está abierto y restaurado al cerrar; regresión Jest específica.
+- [x] Galería móvil con una tarjeta completa, flechas/scroll-snap; dos tarjetas en tablet y cuatro en escritorio.
+- [x] Identidad tipográfica Bodoni Moda/Montserrat local, navegación móvil y estados coherentes; CSS por responsabilidad sin !important.
+- [x] Checkout compacto con productos desplegables, acceso al carrito e inputs coherentes.
+- [x] Nueve viewports del brief recorridos con Chrome de Windows: catálogo, galería, menú abierto, detalle, carrito, entrega, Backdrop, PENDING y recuperación.
+- [x] Menú visible por encima de otras capas, límites del viewport y navegación por teclado/tap comprobados; 120 estados de layout sin errores de página ni overflow.
+- [x] Axe: cero infracciones detectadas en catálogo, menú abierto, detalle, entrega, resumen y PENDING a 320 y 1440 px.
+- [x] Formato, lint, typecheck, build y 97 pruebas Jest; cobertura 97,92% sentencias, 96,40% ramas, 98,10% funciones y 97,83% líneas.
+- [ ] Safari/Firefox, hardware físico, lectores de pantalla y teclado virtual: no verificados en este ciclo.
+
+La API se simuló con los contratos actuales y datos del seed para esta revisión visual;
+no acredita integración real ni pagos Wompi. Capturas antes/después en visual-review/.

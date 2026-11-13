@@ -69,9 +69,7 @@
     padding: 16px 0;
     border-top: 1px solid var(--line);
   }
-  .tone-dot--rose {
-    background: #b47578;
-  }
+
   .detail-copy .stock-line {
     font-size: 12px;
   }

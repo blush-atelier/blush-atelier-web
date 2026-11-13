@@ -1,3 +1,4 @@
+import { selectOption } from './select-helper';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
@@ -78,7 +79,8 @@ describe('UI conectada mediante los puertos', () => {
     await user.click(screen.getByRole('button', { name: 'Rubores' }));
     expect(screen.getByRole('heading', { name: 'Rubor Rose' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Todos' }));
-    await user.selectOptions(
+    await selectOption(
+      user,
       screen.getByRole('combobox', { name: 'Ordenar productos' }),
       'price',
     );
@@ -108,7 +110,8 @@ describe('UI conectada mediante los puertos', () => {
     api.listProducts.mockResolvedValue(success([real, lipstick]));
     const { user } = setup('/', null, api);
     await screen.findByRole('heading', { name: real.name });
-    await user.selectOptions(
+    await selectOption(
+      user,
       screen.getByRole('combobox', { name: 'Filtrar por marca' }),
       'MAC',
     );
@@ -128,7 +131,8 @@ describe('UI conectada mediante los puertos', () => {
     expect(
       screen.getByRole('img', { name: `Imagen no disponible: ${real.name}` }),
     ).toBeVisible();
-    await user.selectOptions(
+    await selectOption(
+      user,
       screen.getByRole('combobox', { name: 'Filtrar por marca' }),
       'Todas',
     );

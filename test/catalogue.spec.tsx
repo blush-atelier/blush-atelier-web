@@ -1,3 +1,4 @@
+import { selectOption } from './select-helper';
 import { Provider } from 'react-redux';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { render, screen, waitFor, within } from '@testing-library/react';
@@ -97,7 +98,8 @@ test('filtros y búsqueda reinician la página y se pueden quitar por separado',
     screen.queryByRole('navigation', { name: 'Páginas del catálogo' }),
   ).not.toBeInTheDocument();
   expect(screen.getByTestId('location')).not.toHaveTextContent('page=');
-  await user.selectOptions(
+  await selectOption(
+    user,
     screen.getByRole('combobox', { name: 'Filtrar por marca' }),
     'MAC',
   );
@@ -110,14 +112,15 @@ test('filtros y búsqueda reinician la página y se pueden quitar por separado',
   expect(screen.getAllByRole('article')).toHaveLength(3);
   await user.click(screen.getByRole('button', { name: 'Quitar categoría' }));
   expect(screen.getAllByRole('article')).toHaveLength(8);
-  await user.selectOptions(
+  await selectOption(
+    user,
     screen.getByRole('combobox', { name: 'Filtrar por marca' }),
     'MAC',
   );
   await user.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
   expect(
     screen.getByRole('combobox', { name: 'Filtrar por marca' }),
-  ).toHaveValue('Todas');
+  ).toHaveTextContent('Todas');
 });
 test('restaura URL compartida, orden y página al volver desde detalle', async () => {
   const { user } = setup('/?page=2&sort=price-desc');
@@ -131,7 +134,7 @@ test('restaura URL compartida, orden y página al volver desde detalle', async (
   expect(screen.getByTestId('location')).toHaveTextContent('page=2');
   expect(
     screen.getByRole('combobox', { name: 'Ordenar productos' }),
-  ).toHaveValue('price-desc');
+  ).toHaveTextContent('Mayor precio');
 });
 test.each([
   ['999', 3],
@@ -163,7 +166,7 @@ test('los accesos por categoría limpian filtros anteriores y muestran el grupo 
   );
   expect(
     screen.getByRole('combobox', { name: 'Filtrar por marca' }),
-  ).toHaveValue('Todas');
+  ).toHaveTextContent('Todas');
 });
 test('ventana numérica acotada para catálogos con muchas páginas', async () => {
   const change = jest.fn();

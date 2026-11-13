@@ -121,6 +121,8 @@ Create a backend PENDING transaction before payment processing. Update status fr
 ## Two-repository organization
 This repository is independent: frontend React or backend NestJS. The sibling repository is linked via README and API contracts. Never require a monorepo. AWS only; do not deploy to Vercel.
 
+Before changing UI, read `PRODUCT.md` and `DESIGN.md`; they record the user-approved corrective brief.
+
 ## Frontend visual reference
 See `docs/design-reference.png`. Use it as visual inspiration, not to copy third-party branding. Premium cosmetics mobile storefront: blush pink, warm beige, off-white, charcoal typography, editorial product photography, restrained radii/shadows, compact navigation, beautiful product details and tracking/status flow. No generic AI dashboard, no excessive cards, gradients, glassmorphism, icons or decorative badges. Build clean maintainable CSS tokens, semantic class names, modular styles, Flexbox/Grid and mobile-first breakpoints. Use reusable components and custom hooks; apply Container/Presentational and reducer/state machine patterns only where beneficial. Prioritize accessibility and iPhone SE viewport.
 

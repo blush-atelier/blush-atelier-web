@@ -212,3 +212,52 @@ Calidad local: npm run format:check, lint, typecheck, test:cov y build. Jest: 92
 7 suites; 97,81% sentencias, 96,32% ramas, 98,00% funciones, 97,73% líneas. Todas >80%.
 No hay dependencias nuevas de la aplicación; Playwright Core/axe se instalaron solo
 como herramientas temporales fuera del repositorio.
+
+## Rediseño correctivo: boutique digital
+
+El brief correctivo reemplaza la composición anterior: hero con foto primero en móvil,
+Bodoni Moda para títulos/marca y Montserrat para lectura. El catálogo prioriza imágenes,
+precios y acciones; a 320 px usa una columna para no comprimir nombres. No se cambiaron
+Redux, contratos, ROP, dinero, stock ni recuperación del checkout.
+
+AtelierSelect usa únicamente @radix-ui/react-select: mantiene foco, teclado, typeahead,
+semántica y selección; sus estilos son propios. El menú se porta al body para evitar
+recortes del grid y usa posicionamiento popper con detección de colisiones. El margen
+inferior contempla la barra móvil; el ancho parte del trigger y la altura se limita al
+espacio disponible. Una lista con más opciones se desplaza internamente. Estado error
+vinculado por aria-describedby; deshabilitado conserva semántica. Los selects ocultos
+que genera Radix son auxiliares, no muestran el menú nativo.
+
+La galería muestra una tarjeta completa por pantalla móvil, dos en tablet y cuatro en
+escritorio; scroll-snap, flechas de 44 px y límites deshabilitados indican navegación.
+La barra inferior usa iconos coherentes, indicador activo y contador real del carrito.
+El checkout reutiliza etiquetas, radios y colores del sistema; conserva el Backdrop.
+
+CSS: controles/select.css; galería/discovery.css; navegación/shell.css; catálogo/catalogue.css.
+Se movieron reglas de pedido a order.css, miniaturas al checkout y tokens/etiquetas a
+foundation.css. Se quitaron reglas obsoletas y overrides de review-amounts, transiciones
+duplicadas y todos los !important. Movimiento solo bajo no-preference; foco visible y
+estado de selección no dependen de animación.
+
+Radix: [documentación oficial](https://www.radix-ui.com/primitives/docs/components/select).
+Bodoni Moda: [fuente y licencia OFL](https://github.com/google/fonts/tree/main/ofl/bodonimoda).
+Se añadió únicamente Radix Select, no un kit UI. El componente aplica inert a los elementos fuera del portal mientras está abierto y restaura solo los atributos que cambió; el fondo no recibe foco ni queda bloqueado al cerrar. npm audit --omit=dev:
+0 vulnerabilidades reportadas en esta ejecución; las incidencias de desarrollo no se
+resolvieron con actualizaciones forzadas fuera de alcance.
+
+PRODUCT.md registra hechos y DESIGN.md conserva las correcciones explícitas de la usuaria
+conforme a learn-taste; no se añadieron preferencias inferidas ni una plantilla de landing.
+Jest conserva el ciclo completo y añade teclado/ratón/Escape/foco/error/disabled del select
+y navegación de galería. Evidencia final y límites de navegador en el checklist.
+
+En móvil, el checkout inicia con un resumen desplegable de productos y acceso a Revisar carrito; los datos de entrega aparecen antes, sin repetir varias fichas completas sobre el formulario.
+
+Verificación correctiva final: nueve viewports del brief, 120 estados con API simulada,
+menú abierto/tap/teclado, galería, detalle, carrito múltiple, entrega/validación,
+Backdrop, PENDING/F5 y estados finales simulados. Sin errores de página ni overflow.
+Axe (WCAG 2 A/AA y 2.1 AA): cero infracciones detectadas en seis pantallas a 320/1440,
+incluido el menú abierto. No prueba lectores de pantalla ni hardware físico.
+El CTA de entrega permanece visible; se comprobaron primer y último input sin quedar
+bajo el footer en los nueve tamaños. Safari/Firefox y teclado virtual siguen sin verificar.
+Capturas WebP en visual-review/ (antes/después y las siete vistas mínimas solicitadas).
+Jest: 97 pruebas, 9 suites; 97,92% sentencias, 96,40% ramas, 98,10% funciones y 97,83% líneas.

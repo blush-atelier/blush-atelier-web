@@ -43,7 +43,7 @@ El catálogo tiene 22 productos, paginados de 8 en 8 (8/8/6). Página, búsqueda
 
 El carrito admite **varios productos con cantidades independientes**. Cada reserva crea un solo pedido y aplica tarifa base/envío una sola vez. Agregar al carrito no reserva stock; solo se aparta al confirmar el resumen. Una solicitud pendiente o incierta bloquea cambios para evitar duplicados.
 
-Montserrat se sirve localmente (WOFF2, licencia OFL), sin consultas externas de fuentes. Las animaciones de carrito, cantidades y navegación móvil respetan reducir movimiento.
+Montserrat y Bodoni Moda se sirven localmente (WOFF2, licencias OFL), sin consultas externas de fuentes. Los filtros usan Radix Select headless con estilos propios, teclado, portal y selección marcada. Las animaciones de carrito, cantidades y navegación móvil respetan reducir movimiento.
 
 La reserva dura 15 minutos y depende de una sesión HttpOnly de una hora. La API libera reservas vencidas al consultar/cotizar/reservar; la pantalla actualiza el pedido cada 20 segundos cuando está visible. Solo se persisten referencias, cantidad y clave de reintento; contacto/dirección se mantienen en memoria del formulario. Una reserva no es un pago aprobado.
 
@@ -72,11 +72,13 @@ npm run test:cov
 npm run build
 ```
 
-Jest: **92 pruebas**, 7 suites. Cobertura local medida: **97,81% statements · 96,32% branches · 98,00% functions · 97,73% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
+Jest: **97 pruebas**, 9 suites. Cobertura local medida: **97,92% statements · 96,40% branches · 98,10% functions · 97,83% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
 
 CI ejecuta `npm ci` y todos los comandos anteriores en PR hacia development/staging/production y pushes a esas ramas o feature/*. La promoción es `feature/* → development → staging → production`; requiere configurar protecciones en GitHub. Workflow definido; ejecución remota pendiente. CD todavía no está habilitado.
 
 Verificación visual en Chrome de Windows: los nueve tamaños solicitados, desde 320×568 hasta 1920×1080, con respuestas de API simuladas. [Evidencia y límites](docs/decisions-and-interview-notes.md#revisión-responsive-y-accesible-con-skills).
+
+[Antes](docs/visual-review/before-375.webp) · [Después](docs/visual-review/after-375.webp) · [Selector abierto](docs/visual-review/brand-selector-375.webp) · [Checkout móvil](docs/visual-review/checkout-320.webp).
 
 ## Entrega pendiente
 

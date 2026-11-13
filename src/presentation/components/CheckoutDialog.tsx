@@ -192,33 +192,41 @@ export function CheckoutDialog() {
               <br />
               <span>Entrega en Colombia.</span>
             </p>
-            <div className="checkout-selection-list">
-              {selection.map(
-                ({ product, quantity }, index) =>
-                  product && (
-                    <div className="checkout-selection" key={product.id}>
-                      <ProductArt product={product} />
-                      <div>
-                        <strong>{product.name}</strong>
-                        <p>Cantidad: {quantity}</p>
-                        {index === 0 && (
-                          <button
-                            type="button"
-                            className="text-button"
-                            disabled={busy}
-                            onClick={() => {
-                              dispatch(actions.checkoutClosed());
-                              navigate('/carrito');
-                            }}
-                          >
-                            Revisar carrito
-                          </button>
-                        )}
+            <details className="checkout-basket">
+              <summary>
+                <span>
+                  Tu selección ·{' '}
+                  {selection.reduce((sum, item) => sum + item.quantity, 0)}{' '}
+                  unidades
+                </span>
+                <Icon name="chevron" />
+              </summary>
+              <div className="checkout-selection-list">
+                {selection.map(
+                  ({ product, quantity }) =>
+                    product && (
+                      <div className="checkout-selection" key={product.id}>
+                        <ProductArt product={product} />
+                        <div>
+                          <strong>{product.name}</strong>
+                          <p>Cantidad: {quantity}</p>
+                        </div>
                       </div>
-                    </div>
-                  ),
-              )}
-            </div>
+                    ),
+                )}
+              </div>
+            </details>
+            <button
+              type="button"
+              className="text-button checkout-cart-link"
+              disabled={busy}
+              onClick={() => {
+                dispatch(actions.checkoutClosed());
+                navigate('/carrito');
+              }}
+            >
+              Revisar carrito
+            </button>
             <fieldset disabled={busy}>
               <legend className="sr-only">Contacto y dirección</legend>
               <div className="checkout-fields">
@@ -227,7 +235,10 @@ export function CheckoutDialog() {
                     className={`form-field ${['fullName', 'addressLine'].includes(field.name) ? 'form-field--wide' : ''}`}
                     key={field.name}
                   >
-                    <label htmlFor={`checkout-${field.name}`}>
+                    <label
+                      className="field-label"
+                      htmlFor={`checkout-${field.name}`}
+                    >
                       {field.label}
                     </label>
                     <input

@@ -60,6 +60,21 @@
 }
 @layer base {
   @font-face {
+    font-family: 'Bodoni Moda';
+    src: url('/fonts/bodoni/bodoni-latin.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Bodoni Moda';
+    src: url('/fonts/bodoni/bodoni-italic-latin.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: italic;
+    font-display: swap;
+  }
+
+  @font-face {
     font-family: 'Montserrat';
     src: url('/fonts/montserrat-latin.woff2') format('woff2');
     font-weight: 100 900;
@@ -67,21 +82,23 @@
     font-display: swap;
   }
   :root {
-    --paper: #fcf9f6;
-    --white: #fff;
+    --paper: #fbf8f4;
+    --white: #fffdfb;
     --blush: #f2dfda;
     --rose: #945161;
     --rose-soft: #f8eeeb;
-    --cocoa: #45312e;
+    --cocoa: #342523;
     --ink: #332a29;
     --muted: #71635f;
     --line: #e5d9d3;
     --sage: #627258;
     --error: #9a333b;
-    --radius: 14px;
-    --serif: 'Montserrat', Arial, sans-serif;
+    --radius: 8px;
+    --nude: #ead7cc;
+    --shadow-menu: 0 10px 32px #34252326;
+    --nav-height: 72px;
+    --serif: 'Bodoni Moda', Georgia, serif;
     --sans: 'Montserrat', Arial, sans-serif;
-    --shadow: 0 12px 36px #45312e0d;
     --ease: cubic-bezier(0.23, 1, 0.32, 1);
     --duration: 220ms;
   }
@@ -126,7 +143,7 @@
   h2 {
     font-family: var(--serif);
     font-weight: 500;
-    line-height: 1.15;
+    line-height: 1.08;
     letter-spacing: -0.03em;
     text-wrap: balance;
   }
@@ -162,19 +179,7 @@
     height: 20px;
     flex: none;
   }
-  .button,
-  .text-button,
-  .icon-button,
-  .round-link {
-    font-family: var(--sans);
-    touch-action: manipulation;
-    transition:
-      background var(--duration) var(--ease),
-      color var(--duration) var(--ease),
-      border-color var(--duration) var(--ease),
-      transform var(--duration) var(--ease),
-      box-shadow var(--duration) var(--ease);
-  }
+
   .button {
     display: inline-flex;
     align-items: center;
@@ -194,7 +199,6 @@
   .button--dark {
     background: var(--cocoa);
     color: var(--white);
-    box-shadow: 0 4px 12px #45312e14;
   }
   .button--outline {
     border-color: var(--line);
@@ -221,9 +225,9 @@
     line-height: 1.4;
     min-height: 44px;
     padding: 10px 14px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: var(--white);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
     text-decoration: none;
     color: var(--cocoa);
   }
@@ -233,7 +237,7 @@
     width: 44px;
     height: 44px;
     flex: none;
-    border-radius: 12px;
+    border-radius: var(--radius);
     background: var(--rose-soft);
   }
   .round-link {
@@ -244,7 +248,7 @@
     min-height: 44px;
     padding: 9px 13px;
     border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: var(--radius);
     background: var(--white);
     font-size: 12px;
     font-weight: 600;
@@ -271,8 +275,6 @@
   @media (hover: hover) and (pointer: fine) {
     .button--dark:hover:not(:disabled) {
       background: #2f211f;
-      box-shadow: 0 8px 20px #45312e24;
-      transform: translateY(-2px);
     }
     .button--outline:hover:not(:disabled),
     .text-button:hover:not(:disabled),
@@ -281,9 +283,24 @@
       background: var(--rose-soft);
       border-color: #cdb6ac;
     }
-    .button:hover .icon,
-    .round-link:hover .icon {
-      transform: translateX(3px);
+  }
+}
+
+@layer responsive {
+  @media (min-width: 600px) {
+    .section-wrap {
+      width: min(1240px, calc(100% - 72px));
     }
+  }
+}
+
+@layer components {
+  .field-label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.02em;
   }
 }

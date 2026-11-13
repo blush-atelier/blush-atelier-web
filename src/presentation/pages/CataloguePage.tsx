@@ -10,6 +10,7 @@ import {
   paginateProducts,
   type Category,
 } from '../../domain/presentation';
+import { AtelierSelect } from '../components/AtelierSelect';
 import { Pagination } from '../components/Pagination';
 import { CategoryDiscovery } from '../components/CategoryDiscovery';
 import { useAppDispatch, useAppSelector } from '../hooks';
@@ -90,21 +91,16 @@ export function CataloguePage() {
       <section className="hero">
         <div className="hero-copy">
           <h1 tabIndex={-1}>
-            El color de
+            Belleza,
             <br />
-            <em>ser tú.</em>
+            <em>a tu manera.</em>
           </h1>
           <p className="hero-description">
-            Esenciales que se sienten como tú.
-            <br />
-            Descubre tu próximo toque de color.
+            Color, texturas y esenciales para un ritual que es solo tuyo.
           </p>
           <a className="button button--dark" href="#coleccion">
             Explorar la colección <Icon name="arrow" />
           </a>
-          <p className="hero-footnote">
-            Rosa suave. Cocoa cálido. Tu propia expresión.
-          </p>
         </div>
         <div className="hero-art">
           <img
@@ -116,11 +112,9 @@ export function CataloguePage() {
             fetchPriority="high"
             alt="Rubor rosa y labial en estuches marfil sobre un pedestal cálido"
           />
-          <span className="image-caption">LA COLECCIÓN ESENCIAL / 01</span>
         </div>
       </section>
       <div className="brand-strip" aria-label="Marcas de la colección">
-        <p>ENCUENTRA TUS FAVORITOS</p>
         {brands.map((value) => (
           <span key={value}>{value}</span>
         ))}
@@ -178,32 +172,36 @@ export function CataloguePage() {
             )}
           </label>
           <div className="catalogue-selects">
-            <label className="sort-field brand-filter">
-              <span>Marca</span>
-              <select
-                aria-label="Filtrar por marca"
-                value={brand}
-                onChange={(event) => setFilter('brand', event.target.value)}
-              >
-                <option value="Todas">Todas las marcas</option>
-                {brands.map((value) => (
-                  <option key={value}>{value}</option>
-                ))}
-                <option>Atelier</option>
-              </select>
-            </label>
-            <label className="sort-field">
-              <span>Ordenar</span>
-              <select
-                aria-label="Ordenar productos"
-                value={sort}
-                onChange={(event) => setFilter('sort', event.target.value)}
-              >
-                <option value="atelier">Selección atelier</option>
-                <option value="price">Menor precio</option>
-                <option value="price-desc">Mayor precio</option>
-              </select>
-            </label>
+            <AtelierSelect
+              label="Marca"
+              accessibleLabel="Filtrar por marca"
+              value={brand}
+              options={[
+                {
+                  value: 'Todas',
+                  label: 'Todas las marcas',
+                  shortLabel: 'Todas',
+                },
+                ...brands.map((value) => ({ value, label: value })),
+                { value: 'Atelier', label: 'Atelier' },
+              ]}
+              onChange={(value) => setFilter('brand', value)}
+            />
+            <AtelierSelect
+              label="Ordenar"
+              accessibleLabel="Ordenar productos"
+              value={sort}
+              options={[
+                {
+                  value: 'atelier',
+                  label: 'Selección atelier',
+                  shortLabel: 'Selección',
+                },
+                { value: 'price', label: 'Menor precio' },
+                { value: 'price-desc', label: 'Mayor precio' },
+              ]}
+              onChange={(value) => setFilter('sort', value)}
+            />
           </div>
         </div>
         <div className="catalogue-filters">
@@ -283,7 +281,6 @@ export function CataloguePage() {
                       {product.name}
                     </Link>
                   </h3>
-                  <p className="product-description">{product.description}</p>
                   <div className="product-card-bottom">
                     <strong>{formatMoney(product.priceMinor)}</strong>
                     <Link

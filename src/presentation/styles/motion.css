@@ -2,7 +2,7 @@
   @keyframes soft-enter {
     from {
       opacity: 0;
-      transform: translateY(14px);
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
@@ -12,7 +12,7 @@
   @keyframes dialog-enter {
     from {
       opacity: 0;
-      transform: translateY(14px) scale(0.985);
+      transform: translateY(8px) scale(0.99);
     }
     to {
       opacity: 1;
@@ -32,59 +32,60 @@
       transform: rotate(360deg);
     }
   }
-  .hero-copy {
-    animation: soft-enter 380ms var(--ease) both;
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-copy {
+      animation: soft-enter 320ms var(--ease) both;
+    }
+    .hero-art img {
+      animation: backdrop-enter 360ms ease both;
+    }
+    .checkout-dialog[open] {
+      animation: dialog-enter 220ms var(--ease) both;
+    }
+    .checkout-dialog[open]::backdrop {
+      animation: backdrop-enter 180ms ease both;
+    }
+    .cart-item {
+      animation: soft-enter 180ms var(--ease) both;
+    }
+    .button,
+    .text-button,
+    .icon-button,
+    .round-link,
+    .quantity-control button {
+      transition:
+        transform 140ms var(--ease),
+        background-color 160ms ease,
+        border-color 160ms ease;
+    }
+    .button:active:not(:disabled):not(:focus-visible),
+    .text-button:active:not(:disabled):not(:focus-visible),
+    .icon-button:active:not(:disabled):not(:focus-visible),
+    .round-link:active:not(:focus-visible),
+    .quantity-control button:active:not(:disabled):not(:focus-visible) {
+      transform: scale(0.98);
+    }
   }
-  .hero-art img {
-    animation: backdrop-enter 420ms var(--ease) both;
-  }
-  .checkout-dialog[open] {
-    animation: dialog-enter 260ms var(--ease) both;
-  }
-  .checkout-dialog[open]::backdrop {
-    animation: backdrop-enter 220ms ease both;
-  }
-  .icon {
-    transition: transform var(--duration) var(--ease);
-  }
-  .cart-item {
-    animation: soft-enter 220ms var(--ease) both;
-  }
-  .button,
-  .text-button,
-  .icon-button,
-  .round-link,
-  .quantity-control button {
-    transition:
-      transform 140ms var(--ease),
-      background-color 160ms ease,
-      border-color 160ms ease;
-  }
-  .button:active:not(:disabled):not(:focus-visible),
-  .text-button:active:not(:disabled):not(:focus-visible),
-  .icon-button:active:not(:disabled):not(:focus-visible),
-  .round-link:active:not(:focus-visible),
-  .quantity-control button:active:not(:disabled):not(:focus-visible) {
-    transform: scale(0.97);
-  }
-  @media (hover: hover) and (pointer: fine) {
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
     .product-image-link {
       transition: transform 180ms var(--ease);
     }
     .product-image-link:hover {
       transform: translateY(-2px);
     }
+    .product-image-link:hover img {
+      transform: scale(1.025);
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
     }
-    *,
-    *::before,
-    *::after {
-      animation: none !important;
-      transition: none !important;
-      scroll-behavior: auto !important;
+    .spinner {
+      animation: none;
+    }
+    .product-art img {
+      transition: none;
     }
   }
 }
