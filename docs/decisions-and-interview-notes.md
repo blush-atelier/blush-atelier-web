@@ -261,3 +261,16 @@ El CTA de entrega permanece visible; se comprobaron primer y último input sin q
 bajo el footer en los nueve tamaños. Safari/Firefox y teclado virtual siguen sin verificar.
 Capturas WebP en visual-review/ (antes/después y las siete vistas mínimas solicitadas).
 Jest: 97 pruebas, 9 suites; 97,92% sentencias, 96,40% ramas, 98,10% funciones y 97,83% líneas.
+
+## Retomar selección y preparación visual para pago
+
+El banner recupera su estilo responsive propio tras el rediseño: una columna móvil,
+dos columnas cuando hay espacio y enlace táctil de 44 px. Sin transacción abre el carrito
+completo; con transacción o solicitud incierta abre /pedido para consultar/reintentar
+la misma identidad. No se crea otra compra al navegar.
+
+Continuar con el pago reemplaza Confirmar reserva. Sigue invocando el mismo caso de uso
+y POST PENDING; la nota visible aclara que Wompi aún no está conectado y no hay cobros.
+No cambia contratos, idempotencia, persistencia ni la autoridad del backend.
+
+Verificado: banner y enlace al carrito en los nueve tamaños del brief con Chrome emulado; CTA → una sola solicitud PENDING con API simulada. Las dos pruebas de navegación nuevas elevan Jest a 99 casos, sin cambios de contratos.

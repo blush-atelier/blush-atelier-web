@@ -182,7 +182,9 @@ describe('UI conectada mediante los puertos', () => {
     expect(screen.getByLabelText('Correo electrónico')).toHaveValue(form.email);
     await user.click(screen.getByRole('button', { name: 'Revisar mi pedido' }));
     await screen.findByRole('heading', { name: 'Resumen de tu compra.' });
-    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Continuar con el pago' }),
+    );
     await screen.findByRole('heading', { name: 'Tu selección te espera.' });
     expect(screen.getByText(transaction.reference)).toBeVisible();
     expect(api.createPending).toHaveBeenCalledTimes(1);
@@ -274,21 +276,23 @@ describe('UI conectada mediante los puertos', () => {
     const api = apiFixture();
     api.createPending.mockResolvedValueOnce(failure('QuoteChanged', 409));
     const { user } = setup('/', progress, api);
-    await screen.findByRole('button', { name: 'Confirmar reserva' });
+    await screen.findByRole('button', { name: 'Continuar con el pago' });
     expect(
       screen.getByText('Tu entrega ya está registrada en esta sesión.'),
     ).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Continuar con el pago' }),
+    );
     await screen.findByRole('alert');
     expect(
-      screen.getByRole('button', { name: 'Confirmar reserva' }),
+      screen.getByRole('button', { name: 'Continuar con el pago' }),
     ).toBeDisabled();
     await user.click(
       screen.getByRole('button', { name: 'Actualizar resumen' }),
     );
     await waitFor(() =>
       expect(
-        screen.getByRole('button', { name: 'Confirmar reserva' }),
+        screen.getByRole('button', { name: 'Continuar con el pago' }),
       ).toBeEnabled(),
     );
   });
@@ -298,14 +302,14 @@ describe('UI conectada mediante los puertos', () => {
     const { user } = setup('/', progress, api);
     await screen.findByRole('alert');
     await user.click(screen.getByRole('button', { name: 'Recuperar resumen' }));
-    await screen.findByRole('button', { name: 'Confirmar reserva' });
+    await screen.findByRole('button', { name: 'Continuar con el pago' });
   });
   test('una respuesta perdida ofrece reintentar la misma reserva', async () => {
     const api = apiFixture();
     api.createPending.mockResolvedValueOnce(failure('NetworkError', 0));
     const { user } = setup('/', progress, api);
     await user.click(
-      await screen.findByRole('button', { name: 'Confirmar reserva' }),
+      await screen.findByRole('button', { name: 'Continuar con el pago' }),
     );
     await user.click(
       await screen.findByRole('button', {
@@ -483,4 +487,37 @@ test('cambiar de paso reinicia el scroll del modal y mantiene el título enfocad
     screen.getByRole('heading', { name: 'Tus datos y entrega.' }),
   ).toHaveFocus();
   expect(dialog.scrollTop).toBe(0);
+});
+
+test('retomar selección abre el carrito completo en lugar de un único detalle', async () => {
+  const saved: SafeProgress = {
+    ...progress,
+    deliveryId: null,
+    requestKey: null,
+    expectedTotalMinor: null,
+    items: [
+      { productId, quantity: 1 },
+      { productId: lipstick.id, quantity: 2 },
+    ],
+  };
+  const { user } = setup('/', saved);
+  await user.click(screen.getByRole('link', { name: 'Retomar mi selección' }));
+  expect(
+    await screen.findByRole('heading', { name: 'Tu próximo ritual.' }),
+  ).toBeVisible();
+  expect(screen.getByRole('article', { name: product.name })).toBeVisible();
+  expect(screen.getByRole('article', { name: lipstick.name })).toBeVisible();
+});
+test('retomar una compra ya creada abre su estado sin crear otra transacción', async () => {
+  const { user, api } = setup('/', {
+    ...progress,
+    transactionId: transaction.id,
+    attempted: true,
+  });
+  await user.click(screen.getByRole('link', { name: 'Retomar mi selección' }));
+  expect(
+    await screen.findByRole('heading', { name: 'Tu selección te espera.' }),
+  ).toBeVisible();
+  expect(api.getTransaction).toHaveBeenCalledWith(transaction.id);
+  expect(api.createPending).not.toHaveBeenCalled();
 });

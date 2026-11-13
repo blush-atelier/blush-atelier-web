@@ -330,10 +330,11 @@ export function CheckoutDialog() {
               <p className="eyebrow">RESUMEN DE TU PEDIDO</p>
               <OrderSummary quote={checkout.quote} />
               <div className="payment-note">
-                <strong>Una reserva, sin cobros.</strong>
+                <strong>Tu pedido, antes del pago.</strong>
                 <p>
-                  Se apartará tu selección por 15 minutos. El pago con tarjeta
-                  aún no está disponible.
+                  Al continuar se creará tu pedido pendiente y se reservarán los
+                  productos por 15 minutos. Wompi Sandbox aún no está conectado:
+                  no se solicitará tu tarjeta ni se realizará ningún cobro.
                 </p>
               </div>
               {checkout.error?.code === 'QuoteChanged' && (
@@ -351,10 +352,10 @@ export function CheckoutDialog() {
                 onClick={() => void reserve()}
               >
                 {busy
-                  ? 'Confirmando reserva…'
+                  ? 'Preparando compra…'
                   : checkout.attempted
                     ? 'Reintentar la misma reserva'
-                    : 'Confirmar reserva'}
+                    : 'Continuar con el pago'}
                 {!busy && <Icon name="arrow" />}
               </button>
               <p className="safe-note">

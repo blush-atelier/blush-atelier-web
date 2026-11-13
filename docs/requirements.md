@@ -99,7 +99,7 @@ This document separates explicit requirements from optional improvements. The as
 El PDF proporcionado se revisó localmente (páginas 2–4). El resumen requiere desglose
 de producto, tarifa base y envío con acción de pago en un Backdrop, con referencia a
 https://m2.material.io/components/backdrop. Se implementa una interpretación de dos
-capas; actualmente la acción es Confirmar reserva y el pago sigue pendiente.
+capas; la acción es Continuar con el pago: actualmente crea PENDING y reserva stock; la conexión con Wompi sigue pendiente.
 El carrito es una mejora solicitada previa a entrega: varios productos y cantidades independientes,
 con una sola reserva atómica y tarifas por pedido. No sustituye el flujo obligatorio de
 tarjeta/entrega → resumen → resultado de pago → producto con stock actualizado.

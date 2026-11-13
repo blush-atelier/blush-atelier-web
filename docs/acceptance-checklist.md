@@ -206,3 +206,12 @@ ramas. Los commits son locales; publicar y promover se revisará aparte.
 
 La API se simuló con los contratos actuales y datos del seed para esta revisión visual;
 no acredita integración real ni pagos Wompi. Capturas antes/después en visual-review/.
+
+## Recuperación visible y CTA de preparación de pago
+
+- [x] Banner responsive separado del catálogo; sin solapamiento en los nueve tamaños del brief, comprobado en Chrome emulado.
+- [x] Retomar selección abre carrito completo; con transacción/solicitud incierta abre el estado, sin duplicar POST.
+- [x] Continuar con el pago crea el mismo PENDING y mantiene aviso explícito: Wompi pendiente, sin tarjeta ni cobros.
+- [x] 99 pruebas Jest, lint, typecheck y build correctos; cobertura de líneas 97,83%.
+
+La comprobación visual usó respuestas de API simuladas; no es evidencia de pago Wompi.

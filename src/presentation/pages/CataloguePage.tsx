@@ -121,18 +121,21 @@ export function CataloguePage() {
       </div>
       <CategoryDiscovery products={products} onSelect={discover} />
       {checkout.productId && (
-        <div className="resume-banner">
+        <aside
+          className="resume-banner section-wrap"
+          aria-label="Retomar tu compra"
+        >
           <span>Tu selección sigue aquí.</span>
           <Link
             to={
               checkout.transactionId || checkout.attempted
                 ? '/pedido'
-                : `/producto/${checkout.productId}`
+                : '/carrito'
             }
           >
             Retomar mi selección <Icon name="arrow" />
           </Link>
-        </div>
+        </aside>
       )}
       <section
         ref={collection}
