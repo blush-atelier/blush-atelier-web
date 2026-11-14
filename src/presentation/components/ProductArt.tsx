@@ -73,7 +73,7 @@ export function ProductArt({
           alt={
             asset
               ? product.name
-              : `${product.name}, imagen ilustrativa de la colección`
+              : `${product.name}, imagen ilustrativa de la tienda`
           }
           onError={() => setFailed((value) => value + 1)}
         />

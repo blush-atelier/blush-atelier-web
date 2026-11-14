@@ -68,8 +68,14 @@ export function validateCard(
     (brand === 'VISA' && ![13, 16, 19].includes(n.length))
   )
     errors.number = 'Revisa el número de tu tarjeta Visa o Mastercard.';
-  if (input.holder.trim().length < 2 || input.holder.trim().length > 100)
-    errors.holder = 'Escribe el nombre que aparece en la tarjeta.';
+  const holder = input.holder.trim().normalize('NFC');
+  if (
+    holder.length < 2 ||
+    holder.length > 100 ||
+    !/^\p{L}[\p{L}\p{M} .’'-]*$/u.test(holder) ||
+    (holder.match(/\p{L}/gu)?.length ?? 0) < 2
+  )
+    errors.holder = 'Escribe el titular con letras, sin números.';
   const match = /^(0[1-9]|1[0-2])\s*\/\s*(\d{2})$/.exec(input.expiry);
   if (
     !match ||

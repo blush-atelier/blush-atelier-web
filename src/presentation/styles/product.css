@@ -185,3 +185,45 @@
     }
   }
 }
+
+@layer components {
+  .related-products {
+    border-top: 1px solid var(--line);
+    margin-top: 48px;
+    padding-top: 32px;
+  }
+  .related-products h2 {
+    font-size: clamp(26px, 4vw, 38px);
+  }
+  .related-products-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 12px;
+  }
+  .related-product {
+    min-width: 0;
+  }
+  .related-product a {
+    display: block;
+  }
+  .related-product .product-art {
+    aspect-ratio: 4/5;
+    margin-bottom: 12px;
+  }
+  .related-product h3 {
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 6px 0;
+  }
+  .related-product p:last-child {
+    font-size: 13px;
+  }
+}
+@layer responsive {
+  @media (min-width: 768px) {
+    .related-products-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 24px;
+    }
+  }
+}

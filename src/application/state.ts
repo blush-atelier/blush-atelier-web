@@ -7,6 +7,8 @@ import type {
   Transaction,
 } from '../domain/contracts';
 export interface CheckoutState {
+  paymentChecking: boolean;
+  sessionExpired: boolean;
   paymentInProgress: boolean;
   paymentSubmitted: boolean;
   providerPaymentId: string | null;
@@ -37,6 +39,8 @@ export interface AppState {
 }
 export function emptyCheckout(): CheckoutState {
   return {
+    paymentChecking: false,
+    sessionExpired: false,
     paymentInProgress: false,
     paymentSubmitted: false,
     providerPaymentId: null,
@@ -186,14 +190,32 @@ const slice = createSlice({
       state.checkout.error = null;
     },
     cardDetailsRequested(state) {
-      state.checkout.step = 'details';
+      state.checkout.step = 'review';
+      state.checkout.quote = state.checkout.transaction ?? state.checkout.quote;
       state.checkout.phase = 'idle';
       state.checkout.error = null;
       state.checkout.paymentInProgress = false;
     },
-    cardReviewRequested(state) {
-      state.checkout.step = 'review';
-      state.checkout.quote = state.checkout.transaction;
+    paymentCheckStarted(state) {
+      state.checkout.paymentChecking = true;
+    },
+    paymentCheckFailed(state, action: PayloadAction<ApiError>) {
+      state.checkout.paymentChecking = false;
+      state.checkout.error = action.payload;
+      if (action.payload.code === 'SessionRequired') {
+        state.checkout.sessionExpired = true;
+        state.checkout.paymentInProgress = false;
+        state.checkout.phase = 'idle';
+      }
+    },
+    paymentChecked(state, action: PayloadAction<Transaction>) {
+      state.checkout.paymentChecking = false;
+      state.checkout.transaction = action.payload;
+      state.checkout.error = null;
+      if (action.payload.status !== 'PENDING') {
+        state.checkout.paymentInProgress = false;
+        state.checkout.step = 'result';
+      }
     },
     paymentUiStarted(state) {
       state.checkout.paymentInProgress = true;
@@ -209,6 +231,7 @@ const slice = createSlice({
         state.checkout.providerPaymentId = action.payload;
     },
     transactionReady(state, action: PayloadAction<Transaction>) {
+      state.checkout.paymentChecking = false;
       if (action.payload.status !== 'PENDING')
         state.checkout.paymentInProgress = false;
       Object.assign(state.checkout, {
@@ -224,7 +247,12 @@ const slice = createSlice({
       action: PayloadAction<{ error: ApiError; uncertain?: boolean }>,
     ) {
       state.checkout.phase = 'idle';
+      state.checkout.paymentChecking = false;
       state.checkout.error = action.payload.error;
+      if (action.payload.error.code === 'SessionRequired') {
+        state.checkout.sessionExpired = true;
+        state.checkout.paymentInProgress = false;
+      }
       if (action.payload.uncertain === false) state.checkout.attempted = false;
     },
     checkoutEdited(state) {

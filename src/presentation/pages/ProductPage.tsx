@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
-import { loadProduct, addToCart } from '../../application/operations';
+import {
+  loadProduct,
+  loadProducts,
+  addToCart,
+} from '../../application/operations';
 import { formatMoney, categoryOf, brandOf } from '../../domain/presentation';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { ProductArt } from '../components/ProductArt';
@@ -18,6 +22,11 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
       ? `/?${new URLSearchParams(saved).toString()}`
       : '/';
   const dispatch = useAppDispatch();
+  const products = useAppSelector((state) => state.products);
+  const catalogueStatus = useAppSelector((state) => state.catalogueStatus);
+  useEffect(() => {
+    if (catalogueStatus === 'idle') void dispatch(loadProducts());
+  }, [dispatch, catalogueStatus]);
   const detail = useAppSelector((state) => state.detail);
   const detailId = useAppSelector((state) => state.detailId);
   const detailStatus = useAppSelector((state) => state.detailStatus);
@@ -26,6 +35,7 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
   const [cartError, setCartError] = useState<ApiError | null>(null);
   useEffect(() => {
     setQuantity(1);
+    setCartError(null);
     void dispatch(loadProduct(id));
   }, [dispatch, id]);
   const product = detailId === id ? detail : null;
@@ -38,7 +48,7 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
           retry={() => void dispatch(loadProduct(id))}
         />
         <Link className="button button--outline" to={collectionUrl}>
-          Volver a la colección
+          Volver a la tienda
         </Link>
       </section>
     );
@@ -73,7 +83,7 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
       <nav className="breadcrumbs" aria-label="Ruta de navegación">
         <Link to={collectionUrl}>
           <Icon name="back" />
-          Colección
+          Volver a la tienda
         </Link>
         <span>/</span>
         <span>{product.name}</span>
@@ -147,6 +157,9 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
             >
               Agregar al carrito <Icon name="arrow" />
             </button>
+            <Link className="button button--outline" to={collectionUrl}>
+              Volver a la tienda
+            </Link>
             <p>Revisa tu carrito antes de completar la entrega</p>
           </div>
           <div className="detail-notes">
@@ -181,6 +194,39 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
           </button>
         </div>
       </div>
+      {products.some((p) => p.id !== product.id && p.availableStock > 0) && (
+        <section
+          className="related-products"
+          aria-labelledby="related-products-title"
+        >
+          <div className="section-heading">
+            <h2 id="related-products-title">También van contigo</h2>
+            <Link className="text-button" to={collectionUrl}>
+              Ver toda la tienda <Icon name="arrow" />
+            </Link>
+          </div>
+          <div className="related-products-grid">
+            {products
+              .filter((p) => p.id !== product.id && p.availableStock > 0)
+              .sort(
+                (a, b) =>
+                  Number(categoryOf(b) === categoryOf(product)) -
+                  Number(categoryOf(a) === categoryOf(product)),
+              )
+              .slice(0, 4)
+              .map((p) => (
+                <article className="related-product" key={p.id}>
+                  <Link to={`/producto/${p.id}`}>
+                    <ProductArt product={p} />
+                    <p className="eyebrow">{brandOf(p)}</p>
+                    <h3>{p.name}</h3>
+                    <p>{formatMoney(p.priceMinor)}</p>
+                  </Link>
+                </article>
+              ))}
+          </div>
+        </section>
+      )}
     </section>
   );
 }

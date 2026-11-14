@@ -1,6 +1,8 @@
 import type { CardInput, CardConfiguration, CardPreview } from '../domain/card';
 import type {
   ApiError,
+  ApiResult,
+  Transaction,
   CheckoutForm,
   PendingInput,
   CartItem,
@@ -189,10 +191,17 @@ export const resumeCheckout =
   (): AppThunk =>
   async (dispatch, getState, { api }) => {
     const current = getState().checkout;
-    if (current.phase !== 'idle') return false;
+    if (
+      current.phase !== 'idle' ||
+      current.sessionExpired ||
+      current.paymentChecking
+    )
+      return false;
     if (current.transactionId) {
       dispatch(actions.operationStarted('resuming'));
       const result = await api.getTransaction(current.transactionId);
+      if (getState().checkout.transactionId !== current.transactionId)
+        return false;
       if (!result.ok) {
         dispatch(actions.checkoutFailed({ error: result.error }));
         return false;
@@ -209,11 +218,12 @@ export const resumeCheckout =
 function cartLocked(checkout: CheckoutState): boolean {
   return (
     checkout.phase !== 'idle' ||
-    (checkout.attempted && !checkout.transaction) ||
-    Boolean(
-      checkout.transactionId &&
-      (!checkout.transaction || checkout.transaction.status === 'PENDING'),
-    )
+    (!checkout.sessionExpired &&
+      ((checkout.attempted && !checkout.transaction) ||
+        Boolean(
+          checkout.transactionId &&
+          (!checkout.transaction || checkout.transaction.status === 'PENDING'),
+        )))
   );
 }
 
@@ -227,7 +237,7 @@ export const addToCart =
     productId: string,
     quantity: number,
   ): AppThunk<Result<undefined, CartError>> =>
-  (dispatch, getState) => {
+  (dispatch, getState, { card }) => {
     const state = getState(),
       current = state.checkout;
     if (cartLocked(current)) return { ok: false, error: 'CheckoutLocked' };
@@ -238,11 +248,13 @@ export const addToCart =
     if (!product) return { ok: false, error: 'ProductNotFound' };
     if (!Number.isSafeInteger(quantity) || quantity < 1)
       return { ok: false, error: 'InvalidQuantity' };
-    const items = current.transactionId ? [] : current.items;
+    const items =
+      current.transactionId || current.sessionExpired ? [] : current.items;
     const found = items.find((i) => i.productId === productId);
     const next = (found?.quantity ?? 0) + quantity;
     if (next > product.availableStock || (!found && items.length >= 50))
       return { ok: false, error: 'InsufficientStock' };
+    if (current.sessionExpired) card?.clear();
     dispatch(
       storeCart(
         found
@@ -318,24 +330,42 @@ export const refreshPayment =
   (providerPaymentId?: string): AppThunk =>
   async (dispatch, getState, { api }) => {
     const current = getState().checkout;
-    if (current.phase !== 'idle' || !current.transactionId) return false;
-    dispatch(actions.operationStarted('resuming'));
+    if (
+      current.phase !== 'idle' ||
+      !current.transactionId ||
+      current.sessionExpired ||
+      current.paymentChecking
+    )
+      return false;
+    if (current.paymentInProgress && !current.paymentSubmitted) return false;
+    // La consulta de fondo no cambia la fase visual ni desmonta las acciones.
+    dispatch(actions.paymentCheckStarted());
     const verified = await api.verifyPayment(
       current.transactionId,
       providerPaymentId ?? current.providerPaymentId ?? undefined,
     );
+    if (getState().checkout.transactionId !== current.transactionId)
+      return false;
     if (!verified.ok) {
-      dispatch(actions.checkoutFailed({ error: verified.error }));
+      dispatch(actions.paymentCheckFailed(verified.error));
       return false;
     }
     if (verified.value.submitted) dispatch(actions.paymentSubmissionStarted());
     const result = await api.getTransaction(current.transactionId);
+    if (getState().checkout.transactionId !== current.transactionId)
+      return false;
     if (!result.ok) {
-      dispatch(actions.checkoutFailed({ error: result.error }));
+      dispatch(actions.paymentCheckFailed(result.error));
       return false;
     }
-    dispatch(actions.transactionReady(result.value));
-    void dispatch(loadProducts());
+    dispatch(actions.paymentChecked(result.value));
+    if (
+      current.transaction?.status !== result.value.status ||
+      current.transaction?.reservationStatus !==
+        result.value.reservationStatus ||
+      !getState().products.length
+    )
+      void dispatch(loadProducts());
     return true;
   };
 
@@ -357,6 +387,7 @@ export const startPayment =
         return false;
       }
       if (verified.value.submitted || current.providerPaymentId) {
+        dispatch(actions.paymentSubmissionStarted());
         dispatch(actions.operationStarted('idle'));
         return dispatch(refreshPayment());
       }
@@ -422,9 +453,7 @@ export const cardEnabled =
   (_d, _s, { card }) =>
     Boolean(card);
 export const loadCardConfiguration =
-  (): AppThunk<
-    Promise<import('../domain/contracts').ApiResult<CardConfiguration>>
-  > =>
+  (): AppThunk<Promise<ApiResult<CardConfiguration>>> =>
   (_d, _s, { card }) =>
     card
       ? card.configuration()
@@ -437,17 +466,16 @@ export const clearCard =
   (_d, _s, { card }) =>
     card?.clear();
 export const prepareCardCheckout =
-  (
-    form: CheckoutForm,
-    input: CardInput,
-  ): AppThunk<Promise<CardPreview | null>> =>
+  (input: CardInput): AppThunk<Promise<CardPreview | null>> =>
   async (dispatch, getState, { card }) => {
+    const current = getState().checkout;
     if (
-      getState().checkout.phase !== 'idle' ||
-      getState().checkout.paymentInProgress
+      !card ||
+      current.phase !== 'idle' ||
+      current.paymentInProgress ||
+      !current.quote
     )
       return null;
-    if (!card || getState().checkout.phase !== 'idle') return null;
     dispatch(actions.operationStarted('preparing'));
     const prepared = await card.prepare(input);
     if (!prepared.ok) {
@@ -455,13 +483,37 @@ export const prepareCardCheckout =
       return null;
     }
     dispatch(actions.operationStarted('idle'));
-    if (getState().checkout.transactionId) {
-      dispatch(actions.cardReviewRequested());
-      return prepared.value;
-    }
-    if (!(await dispatch(prepareCheckout(form)))) {
-      card.clear();
-      return null;
-    }
     return prepared.value;
+  };
+export const payWithCard =
+  (input: CardInput): AppThunk =>
+  async (dispatch) => {
+    if (!(await dispatch(prepareCardCheckout(input)))) return false;
+    return dispatch(checkoutAndPay());
+  };
+export const lookupOrder =
+  (reference: string): AppThunk<Promise<ApiResult<Transaction>>> =>
+  async (_dispatch, _getState, { api }) => {
+    const match =
+      /^BA-([a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})$/i.exec(
+        reference.trim(),
+      );
+    if (!match)
+      return { ok: false, error: { code: 'InvalidInput', status: 400 } };
+    // La referencia no concede acceso: la API comprueba también la cookie del comprador.
+    const id = match[1].toLowerCase(),
+      result = await api.getTransaction(id);
+    if (!result.ok || result.value.status !== 'PENDING') return result;
+    const verified = await api.verifyPayment(id);
+    if (!verified.ok) return verified;
+    return api.getTransaction(id);
+  };
+
+export const restartCheckout =
+  (): AppThunk<boolean> =>
+  (dispatch, getState, { card }) => {
+    if (getState().checkout.phase !== 'idle') return false;
+    card?.clear();
+    dispatch(actions.checkoutReset());
+    return true;
   };

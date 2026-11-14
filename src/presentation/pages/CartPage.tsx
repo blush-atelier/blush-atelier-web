@@ -6,6 +6,7 @@ import {
   updateCartQuantity,
   removeFromCart,
   beginCartCheckout,
+  restartCheckout,
 } from '../../application/operations';
 import {
   brandOf,
@@ -70,7 +71,7 @@ export function CartPage() {
         <h1 tabIndex={-1}>Todo empieza con un esencial.</h1>
         <p>Encuentra ese pequeño toque que hará tuyo el día.</p>
         <Link className="button button--dark" to="/">
-          Explorar la colección
+          Explorar la tienda
           <Icon name="arrow" />
         </Link>
       </section>
@@ -197,7 +198,14 @@ export function CartPage() {
               confirmar.
             </p>
             {notice && <p role="alert">{notice}</p>}
-            {locked ? (
+            {checkout.sessionExpired ? (
+              <button
+                className="button button--dark"
+                onClick={() => dispatch(restartCheckout())}
+              >
+                Empezar una nueva selección
+              </button>
+            ) : locked ? (
               <>
                 <p className="cart-locked">
                   Tu compra ya tiene una solicitud en curso. Consulta su estado

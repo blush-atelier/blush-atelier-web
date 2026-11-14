@@ -274,10 +274,10 @@
     line-height: 1.5;
   }
   .stock-dot {
-    width: 5px;
-    height: 5px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    background: var(--sage);
+    background: var(--stock-green);
     flex: none;
   }
   .stock-dot--empty {
@@ -458,6 +458,25 @@
     }
     .catalogue-filters {
       flex-wrap: nowrap;
+    }
+  }
+}
+
+@layer motion {
+  @media (prefers-reduced-motion: no-preference) {
+    .stock-dot:not(.stock-dot--empty) {
+      animation: stock-glow 2400ms ease-in-out infinite;
+    }
+  }
+  @keyframes stock-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 #21834b26;
+    }
+    50% {
+      box-shadow:
+        0 0 0 4px #21834b0d,
+        0 0 8px #21834b4d;
     }
   }
 }

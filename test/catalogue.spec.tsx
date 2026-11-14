@@ -129,7 +129,9 @@ test('restaura URL compartida, orden y página al volver desde detalle', async (
   await user.click(screen.getByRole('link', { name: 'Ver Producto 14' }));
   await screen.findByRole('button', { name: 'Agregar al carrito' });
   const crumbs = screen.getByRole('navigation', { name: 'Ruta de navegación' });
-  await user.click(within(crumbs).getByRole('link', { name: 'Colección' }));
+  await user.click(
+    within(crumbs).getByRole('link', { name: 'Volver a la tienda' }),
+  );
   await screen.findByRole('heading', { name: 'Producto 14' });
   expect(screen.getByTestId('location')).toHaveTextContent('page=2');
   expect(

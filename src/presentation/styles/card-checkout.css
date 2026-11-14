@@ -1,4 +1,11 @@
 @layer components {
+  .review-payment-form {
+    margin-top: 24px;
+  }
+  .review-payment-form > .button {
+    width: 100%;
+    margin-top: 20px;
+  }
   .card-fields {
     padding: 20px 0 28px;
     margin: 0 0 26px;

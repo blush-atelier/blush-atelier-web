@@ -6,12 +6,13 @@ import {
   refreshPayment,
   startPayment,
   cardEnabled,
+  restartCheckout,
 } from '../../application/operations';
-import { actions } from '../../application/state';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { OrderSummary } from '../components/OrderSummary';
 import { ProductArt } from '../components/ProductArt';
 import { Icon } from '../components/Icon';
+import { OrderLookup } from '../components/OrderLookup';
 import { ErrorNotice, Loading } from '../components/Feedback';
 const statuses: Record<
   TransactionStatus,
@@ -49,6 +50,22 @@ const statuses: Record<
   },
 };
 export function OrderPage() {
+  const hasOrder = useAppSelector((state) =>
+    Boolean(state.checkout.transactionId || state.checkout.attempted),
+  );
+  return hasOrder ? (
+    <>
+      <CurrentOrder />
+      <OrderLookup />
+    </>
+  ) : (
+    <>
+      <OrderLookup />
+      <CurrentOrder />
+    </>
+  );
+}
+function CurrentOrder() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const checkout = useAppSelector((state) => state.checkout);
@@ -58,29 +75,9 @@ export function OrderPage() {
     setCardMode(dispatch(cardEnabled()));
   }, [dispatch]);
   const [copied, setCopied] = useState('');
-  const transaction =
-    checkout.error?.code === 'SessionRequired' ? null : checkout.transaction;
-  useEffect(() => {
-    if (!checkout.transactionId && !checkout.attempted) return;
-    void dispatch(checkout.transactionId ? refreshPayment() : resumeCheckout());
-    if (
-      checkout.transaction?.status &&
-      checkout.transaction.status !== 'PENDING'
-    )
-      return;
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'visible')
-        void dispatch(refreshPayment());
-    }, 20000);
-    return () => clearInterval(timer);
-  }, [
-    dispatch,
-    checkout.transactionId,
-    checkout.transaction?.status,
-    checkout.attempted,
-  ]);
+  const transaction = checkout.sessionExpired ? null : checkout.transaction;
   const reset = () => {
-    dispatch(actions.checkoutReset());
+    dispatch(restartCheckout());
     navigate('/');
   };
   if (!transaction)
@@ -105,7 +102,7 @@ export function OrderPage() {
           error={cardMode ? null : checkout.error}
           retry={() => void dispatch(resumeCheckout())}
         />
-        {checkout.phase !== 'idle' ? (
+        {checkout.phase !== 'idle' || checkout.paymentChecking ? (
           <Loading label="Consultando tu selección…" />
         ) : (
           <div className="empty-order">
@@ -120,10 +117,10 @@ export function OrderPage() {
               </button>
             ) : (
               <Link className="button button--dark" to="/">
-                Descubrir la colección <Icon name="arrow" />
+                Descubrir la tienda <Icon name="arrow" />
               </Link>
             )}
-            {checkout.error?.code === 'SessionRequired' && (
+            {checkout.sessionExpired && (
               <>
                 <p>
                   La sesión anterior ya no permite consultar el pedido. Su
@@ -218,7 +215,9 @@ export function OrderPage() {
                 </h2>
                 <p>
                   {transaction.reservationStatus === 'ACTIVE'
-                    ? `Reserva hasta las ${until}. Hora de Colombia. Actualiza el estado para verificar su vigencia.`
+                    ? checkout.paymentSubmitted
+                      ? 'Mantenemos los productos reservados hasta verificar el resultado del pago.'
+                      : `Reserva hasta las ${until}. Hora de Colombia. Actualiza el estado para verificar su vigencia.`
                     : 'Estado actualizado desde tu pedido.'}
                 </p>
               </div>
@@ -243,7 +242,10 @@ export function OrderPage() {
                       ? 'Pago no aprobado'
                       : transaction.status === 'EXPIRED'
                         ? 'Reserva finalizada'
-                        : 'Pago pendiente'}
+                        : checkout.paymentSubmitted &&
+                            transaction.status === 'PENDING'
+                          ? 'Procesando pago'
+                          : 'Pago pendiente'}
                 </h2>
                 <p>
                   {transaction.status === 'PENDING'
@@ -295,7 +297,7 @@ export function OrderPage() {
                 : 'Actualizar estado'}
             </button>
             <Link className="text-button" to="/">
-              Volver a la colección <Icon name="arrow" />
+              Volver a la tienda <Icon name="arrow" />
             </Link>
           </div>
         </div>
@@ -308,7 +310,9 @@ export function OrderPage() {
                 <div className="order-product" key={item.productId}>
                   <ProductArt product={product} />
                   <div>
-                    <h2>{product.name}</h2>
+                    <h2>
+                      <Link to={`/producto/${product.id}`}>{product.name}</Link>
+                    </h2>
                     <p>Cantidad: {item.quantity}</p>
                   </div>
                 </div>
