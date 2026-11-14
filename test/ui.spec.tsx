@@ -613,3 +613,14 @@ test('pedido aprobado vuelve a tienda sin aviso de selección pendiente', async 
     screen.getAllByRole('link', { name: 'Consultar estado del pedido' }).length,
   ).toBeGreaterThan(0);
 });
+
+test('el detalle ofrece otros productos disponibles y regreso visible a tienda', async () => {
+  setup(`/producto/${productId}`);
+  await screen.findByRole('heading', { name: 'También van contigo' });
+  expect(
+    screen.getAllByRole('link', { name: 'Volver a la tienda' }).length,
+  ).toBeGreaterThan(0);
+  expect(
+    screen.getByRole('link', { name: new RegExp(lipstick.name) }),
+  ).toHaveAttribute('href', `/producto/${lipstick.id}`);
+});
