@@ -31,15 +31,15 @@ Vite envía `/api` al backend local mediante proxy: no necesitas `.env` en el fr
 ## Qué probar
 
 1. Explora Bases, Correctores, Sombras o Accesorios; busca y filtra por categoría o marca (MAC, Too Faced, Bloomshell, Atenea); entra al detalle y cambia la cantidad.
-2. Pulsa **Agregar al carrito**. Agrega distintos productos desde la colección. Se abre una vista lateral sin salir del producto; puedes seguir comprando o pulsar Revisar carrito para cambiar unidades y eliminar líneas antes de continuar.
-3. Pulsa **Pagar con tarjeta de crédito**. El modal valida número, titular, vencimiento y CVC, detecta Visa/Mastercard y solicita las dos aceptaciones de Wompi. Utiliza exclusivamente los datos oficiales de Sandbox. Completa contacto y entrega. Elige Departamento y después Ciudad / municipio; cambiar departamento limpia la ciudad.
-4. Revisa producto + tarifa base + envío en el resumen de dos capas (Backdrop). **Ver mis productos** despliega la selección (Ver mi producto si elegiste uno). Pulsa **Continuar con el pago**: crea primero `PENDING` y envía el token a nuestra API. Se muestra **Completando pago** mientras se consulta el resultado verificado. Los avisos se abren en una ventana superior al checkout.
-5. Refresca `/pedido`: se consulta el estado en API. Vuelve a la colección para ver el stock actualizado.
+2. Pulsa **Agregar al carrito**. Agrega distintos productos desde la tienda. Se abre una vista lateral sin salir del producto; puedes seguir comprando o pulsar Revisar carrito para cambiar unidades y eliminar líneas antes de continuar.
+3. Pulsa **Pagar con tarjeta de crédito**. Completa primero contacto y entrega y pulsa **Completar pago**. Después aparecen el resumen y la tarjeta: número, titular, vencimiento, CVC y dos aceptaciones de Wompi; el logo se detecta dentro del campo. Utiliza exclusivamente los datos oficiales de Sandbox. Elige Departamento y después Ciudad / municipio; cambiar departamento limpia la ciudad.
+4. Revisa producto + tarifa base + envío en el resumen de dos capas (Backdrop). **Ver mis productos** despliega la selección (Ver mi producto si elegiste uno). Pulsa **Registrar pago**: crea primero `PENDING` y envía el token a nuestra API. Se activa **03 · Procesando pago** y se muestra **Completando pago** mientras se consulta el resultado verificado. Los avisos se abren en una ventana superior al checkout.
+5. En **Mi pedido** puedes consultar una referencia de la sesión activa sin modificar el carrito. Refresca `/pedido`: se consulta el estado en API. Vuelve a la tienda para ver el stock actualizado.
 6. En DevTools prueba 320, 375, 768 y 1440 px; usa Tab y Escape en el modal. Desconecta la red y revisa el error/reintento.
 
 El seed añade 20 productos de marcas reales con fotos optimizadas y precios de referencia en COP consultados el 13/11/2026; conserva los 2 productos ficticios anteriores. Stock de demostración. [Fuentes del catálogo](docs/decisions-and-interview-notes.md#mejora-visual-y-catálogo-real--13112026).
 
-El catálogo tiene 22 productos, paginados de 8 en 8 (8/8/6). Página, búsqueda, categoría, marca y orden quedan en la URL; al cambiar filtros se vuelve a la primera página y el enlace Colección del detalle conserva la selección. La paginación actual es local sobre el listado de API.
+El catálogo tiene 22 productos, paginados de 8 en 8 (8/8/6). Página, búsqueda, categoría, marca y orden quedan en la URL; al cambiar filtros se vuelve a la primera página y el enlace Tienda del detalle conserva la selección. La paginación actual es local sobre el listado de API.
 
 El carrito admite **varios productos con cantidades independientes**. Cada reserva crea un solo pedido y aplica tarifa base/envío una sola vez. Agregar al carrito no reserva stock; solo se aparta al confirmar el resumen. Una solicitud pendiente o incierta bloquea cambios para evitar duplicados.
 
@@ -74,7 +74,7 @@ npm run test:cov
 npm run build
 ```
 
-Jest: **113 pruebas**, 11 suites. Cobertura local medida: **96,23% statements · 92,81% branches · 97,12% functions · 96,20% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
+Jest: **118 pruebas**, 11 suites. Cobertura local medida: **96,54% statements · 92,36% branches · 97,19% functions · 96,62% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
 
 CI ejecuta `npm ci` y todos los comandos anteriores en PR hacia development/staging/production y pushes a esas ramas o feature/*. La promoción es `feature/* → development → staging → production`; requiere configurar protecciones en GitHub. Workflow definido; ejecución remota pendiente. CD todavía no está habilitado.
 
@@ -90,9 +90,9 @@ el Widget ni VITE_WOMPI_WIDGET_URL. No se instalaron dependencias nuevas.
 
 El adaptador usa Web Crypto (JWE RSA-OAEP-256 + A256GCM) y envía la tarjeta cifrada
 **directamente a Wompi**. Nuestra API recibe únicamente token, cuotas y aceptaciones.
-PAN/CVC solo viven en el formulario; se limpian al preparar el resumen o cerrar. El token queda
+PAN/CVC solo viven en el formulario; se limpian al iniciar el pago o cerrar. El token queda
 fuera de Redux y localStorage y se descarta tras el envío. La tokenización no mueve
-fondos: el cargo se pide después del resumen y de crear PENDING.
+fondos: el cargo se pide después de revisar el resumen, completar la tarjeta y crear PENDING.
 
 Con F5 no se recupera la tarjeta: si aún no se envió el pago, se solicita de nuevo.
 Si ya se envió, se consulta el mismo pedido sin reenviar el cargo. Timeout no significa

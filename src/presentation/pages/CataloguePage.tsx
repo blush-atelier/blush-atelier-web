@@ -99,7 +99,7 @@ export function CataloguePage() {
             Color, texturas y esenciales para un ritual que es solo tuyo.
           </p>
           <a className="button button--dark" href="#coleccion">
-            Explorar la colección <Icon name="arrow" />
+            Explorar la tienda <Icon name="arrow" />
           </a>
         </div>
         <div className="hero-art">
@@ -114,13 +114,13 @@ export function CataloguePage() {
           />
         </div>
       </section>
-      <div className="brand-strip" aria-label="Marcas de la colección">
+      <div className="brand-strip" aria-label="Marcas de la tienda">
         {brands.map((value) => (
           <span key={value}>{value}</span>
         ))}
       </div>
       <CategoryDiscovery products={products} onSelect={discover} />
-      {checkout.productId && (
+      {checkout.productId && !checkout.transactionId && !checkout.attempted && (
         <aside
           className="resume-banner section-wrap"
           aria-label="Retomar tu compra"
@@ -134,6 +134,20 @@ export function CataloguePage() {
             }
           >
             Retomar mi selección <Icon name="arrow" />
+          </Link>
+        </aside>
+      )}
+      {checkout.transactionId && (
+        <aside
+          className="order-status-banner section-wrap"
+          aria-label="Estado de tu pedido"
+        >
+          <div>
+            <strong>Tu pedido, cuando lo necesites.</strong>
+            <p>Consulta su estado con tu número de referencia.</p>
+          </div>
+          <Link to="/pedido">
+            Consultar estado del pedido <Icon name="arrow" />
           </Link>
         </aside>
       )}
@@ -316,9 +330,9 @@ export function CataloguePage() {
         {catalogueStatus === 'ready' && visible.length === 0 && (
           <div className="empty-state">
             <h3>No encontramos ese producto.</h3>
-            <p>Prueba otra búsqueda o vuelve a ver la colección.</p>
+            <p>Prueba otra búsqueda o vuelve a ver la tienda.</p>
             <button className="text-button" onClick={clearFilters}>
-              Ver toda la colección
+              Ver toda la tienda
             </button>
           </div>
         )}

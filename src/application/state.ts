@@ -186,14 +186,11 @@ const slice = createSlice({
       state.checkout.error = null;
     },
     cardDetailsRequested(state) {
-      state.checkout.step = 'details';
+      state.checkout.step = 'review';
+      state.checkout.quote = state.checkout.transaction ?? state.checkout.quote;
       state.checkout.phase = 'idle';
       state.checkout.error = null;
       state.checkout.paymentInProgress = false;
-    },
-    cardReviewRequested(state) {
-      state.checkout.step = 'review';
-      state.checkout.quote = state.checkout.transaction;
     },
     paymentUiStarted(state) {
       state.checkout.paymentInProgress = true;

@@ -15,6 +15,9 @@ import { createAppStore } from '../src/application/store';
 import { actions } from '../src/application/state';
 import {
   prepareCardCheckout,
+  prepareCheckout,
+  payWithCard,
+  lookupOrder,
   checkoutAndPay,
   startPayment,
   loadCardConfiguration,
@@ -224,7 +227,7 @@ function fixture(saved = progress) {
     });
   return { api, card, store, persistence };
 }
-it('tarjeta antes del resumen, PENDING antes del cargo, sin datos sensibles en Redux/persistencia', async () => {
+it('datos y resumen antes de tarjeta, PENDING antes del cargo, sin datos sensibles en Redux/persistencia', async () => {
   const f = fixture();
   f.api.verifyPayment.mockResolvedValue(
     success({ verified: false, submitted: false }),
@@ -232,7 +235,9 @@ it('tarjeta antes del resumen, PENDING antes del cargo, sin datos sensibles en R
   expect(f.store.dispatch(cardEnabled())).toBe(true);
   expect((await f.store.dispatch(loadCardConfiguration())).ok).toBe(true);
   f.store.dispatch(actions.checkoutEdited());
-  expect(await f.store.dispatch(prepareCardCheckout(form, input))).toEqual({
+  expect(await f.store.dispatch(prepareCheckout(form))).toBe(true);
+  expect(f.card.prepare).not.toHaveBeenCalled();
+  expect(await f.store.dispatch(prepareCardCheckout(input))).toEqual({
     brand: 'VISA',
     lastFour: '4242',
   });
@@ -271,7 +276,7 @@ it('token perdido vuelve al formulario; timeout conserva completando y error con
   );
   f.card.authorization.mockReturnValue(null);
   expect(await f.store.dispatch(startPayment())).toBe(false);
-  expect(f.store.getState().checkout.step).toBe('details');
+  expect(f.store.getState().checkout.step).toBe('review');
   expect(await f.store.dispatch(checkoutAndPay())).toBe(false);
   f.card.authorization.mockReturnValue(authorization);
   jest.mocked(f.api.chargePayment!).mockResolvedValue({
@@ -284,20 +289,24 @@ it('token perdido vuelve al formulario; timeout conserva completando y error con
   expect(f.store.getState().checkout.error?.code).toBe('NetworkError');
   f.store.dispatch(clearCard());
 });
-it('fallo de tokenización o preparación no reserva ni cobra', async () => {
+it('no tokeniza antes de tener resumen y un fallo de tokenización no reserva ni cobra', async () => {
   const f = fixture();
-  f.card.prepare.mockResolvedValueOnce({
-    ok: false,
-    error: { code: 'InvalidPaymentInput', status: 400 },
-  });
-  expect(await f.store.dispatch(prepareCardCheckout(form, input))).toBeNull();
-  expect(f.api.createPending).not.toHaveBeenCalled();
+  expect(await f.store.dispatch(prepareCardCheckout(input))).toBeNull();
+  expect(f.card.prepare).not.toHaveBeenCalled();
   f.api.registerCustomer.mockResolvedValueOnce({
     ok: false,
     error: { code: 'NetworkError', status: 0 },
   });
-  expect(await f.store.dispatch(prepareCardCheckout(form, input))).toBeNull();
-  expect(f.card.clear).toHaveBeenCalled();
+  expect(await f.store.dispatch(prepareCheckout(form))).toBe(false);
+  expect(f.card.prepare).not.toHaveBeenCalled();
+  expect(await f.store.dispatch(prepareCheckout(form))).toBe(true);
+  f.card.prepare.mockResolvedValueOnce({
+    ok: false,
+    error: { code: 'InvalidPaymentInput', status: 400 },
+  });
+  expect(await f.store.dispatch(payWithCard(input))).toBe(false);
+  expect(f.api.createPending).not.toHaveBeenCalled();
+  expect(f.api.chargePayment).not.toHaveBeenCalled();
 });
 it('HTTP proyecta solo configuración pública, acepta submitted y envía exclusivamente token', async () => {
   const request = jest.fn().mockResolvedValue({
@@ -343,4 +352,56 @@ it('doble clic y pago en curso no generan otro envío desde el frontend', async 
   expect(f.api.chargePayment).toHaveBeenCalledTimes(1);
   f.store.dispatch(actions.paymentUiStarted());
   expect(await f.store.dispatch(checkoutAndPay())).toBe(false);
+});
+
+it('consulta por referencia verifica PENDING sin sustituir carrito ni persistencia', async () => {
+  const f = fixture();
+  const before = JSON.stringify(f.store.getState()),
+    saved = JSON.stringify(f.persistence.current);
+  f.api.getTransaction
+    .mockResolvedValueOnce(success(transaction))
+    .mockResolvedValueOnce(
+      success({
+        ...transaction,
+        status: 'APPROVED',
+        reservationStatus: 'CONFIRMED',
+      }),
+    );
+  const result = await f.store.dispatch(
+    lookupOrder('  ' + transaction.reference + '  '),
+  );
+  expect(result.ok && result.value.status).toBe('APPROVED');
+  expect(f.api.verifyPayment).toHaveBeenCalledWith(transaction.id);
+  expect(JSON.stringify(f.store.getState())).toBe(before);
+  expect(JSON.stringify(f.persistence.current)).toBe(saved);
+});
+it('referencia inválida, sesión ajena y proveedor caído no revelan ni inventan pedido', async () => {
+  const f = fixture();
+  expect((await f.store.dispatch(lookupOrder('../unsafe'))).ok).toBe(false);
+  expect(f.api.getTransaction).not.toHaveBeenCalled();
+  f.api.getTransaction.mockResolvedValueOnce({
+    ok: false,
+    error: { code: 'TransactionNotFound', status: 404 },
+  });
+  expect((await f.store.dispatch(lookupOrder(transaction.reference))).ok).toBe(
+    false,
+  );
+  expect(f.api.verifyPayment).not.toHaveBeenCalled();
+  f.api.verifyPayment.mockResolvedValueOnce({
+    ok: false,
+    error: { code: 'PaymentProviderUnavailable', status: 503 },
+  });
+  expect((await f.store.dispatch(lookupOrder(transaction.reference))).ok).toBe(
+    false,
+  );
+  f.api.getTransaction.mockResolvedValueOnce(
+    success({
+      ...transaction,
+      status: 'APPROVED',
+      reservationStatus: 'CONFIRMED',
+    }),
+  );
+  expect((await f.store.dispatch(lookupOrder(transaction.reference))).ok).toBe(
+    true,
+  );
 });

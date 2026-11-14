@@ -39,7 +39,7 @@ export function App() {
           element={
             <section className="section-wrap page-empty">
               <p className="eyebrow">VOLVAMOS A LO ESENCIAL</p>
-              <h1 tabIndex={-1}>Este camino no está en la colección.</h1>
+              <h1 tabIndex={-1}>Este camino no está en la tienda.</h1>
               <Link className="button button--dark" to="/">
                 Volver al inicio
               </Link>

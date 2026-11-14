@@ -38,7 +38,7 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
           retry={() => void dispatch(loadProduct(id))}
         />
         <Link className="button button--outline" to={collectionUrl}>
-          Volver a la colección
+          Volver a la tienda
         </Link>
       </section>
     );
@@ -73,7 +73,7 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
       <nav className="breadcrumbs" aria-label="Ruta de navegación">
         <Link to={collectionUrl}>
           <Icon name="back" />
-          Colección
+          Tienda
         </Link>
         <span>/</span>
         <span>{product.name}</span>

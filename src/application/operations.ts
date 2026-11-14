@@ -1,6 +1,8 @@
 import type { CardInput, CardConfiguration, CardPreview } from '../domain/card';
 import type {
   ApiError,
+  ApiResult,
+  Transaction,
   CheckoutForm,
   PendingInput,
   CartItem,
@@ -422,9 +424,7 @@ export const cardEnabled =
   (_d, _s, { card }) =>
     Boolean(card);
 export const loadCardConfiguration =
-  (): AppThunk<
-    Promise<import('../domain/contracts').ApiResult<CardConfiguration>>
-  > =>
+  (): AppThunk<Promise<ApiResult<CardConfiguration>>> =>
   (_d, _s, { card }) =>
     card
       ? card.configuration()
@@ -437,17 +437,16 @@ export const clearCard =
   (_d, _s, { card }) =>
     card?.clear();
 export const prepareCardCheckout =
-  (
-    form: CheckoutForm,
-    input: CardInput,
-  ): AppThunk<Promise<CardPreview | null>> =>
+  (input: CardInput): AppThunk<Promise<CardPreview | null>> =>
   async (dispatch, getState, { card }) => {
+    const current = getState().checkout;
     if (
-      getState().checkout.phase !== 'idle' ||
-      getState().checkout.paymentInProgress
+      !card ||
+      current.phase !== 'idle' ||
+      current.paymentInProgress ||
+      !current.quote
     )
       return null;
-    if (!card || getState().checkout.phase !== 'idle') return null;
     dispatch(actions.operationStarted('preparing'));
     const prepared = await card.prepare(input);
     if (!prepared.ok) {
@@ -455,13 +454,28 @@ export const prepareCardCheckout =
       return null;
     }
     dispatch(actions.operationStarted('idle'));
-    if (getState().checkout.transactionId) {
-      dispatch(actions.cardReviewRequested());
-      return prepared.value;
-    }
-    if (!(await dispatch(prepareCheckout(form)))) {
-      card.clear();
-      return null;
-    }
     return prepared.value;
+  };
+export const payWithCard =
+  (input: CardInput): AppThunk =>
+  async (dispatch) => {
+    if (!(await dispatch(prepareCardCheckout(input)))) return false;
+    return dispatch(checkoutAndPay());
+  };
+export const lookupOrder =
+  (reference: string): AppThunk<Promise<ApiResult<Transaction>>> =>
+  async (_dispatch, _getState, { api }) => {
+    const match =
+      /^BA-([a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})$/i.exec(
+        reference.trim(),
+      );
+    if (!match)
+      return { ok: false, error: { code: 'InvalidInput', status: 400 } };
+    // La referencia no concede acceso: la API comprueba también la cookie del comprador.
+    const id = match[1].toLowerCase(),
+      result = await api.getTransaction(id);
+    if (!result.ok || result.value.status !== 'PENDING') return result;
+    const verified = await api.verifyPayment(id);
+    if (!verified.ok) return verified;
+    return api.getTransaction(id);
   };

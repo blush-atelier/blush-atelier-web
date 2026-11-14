@@ -54,7 +54,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 : ''
             }
           >
-            Colección
+            Tienda
           </NavLink>
           <Link
             to="/#ayuda"
@@ -96,7 +96,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <a href="#inicio">Volver arriba ↑</a>
         </nav>
         <div className="footer-bottom">
-          <span>Blush Atelier · Colección esencial</span>
+          <span>Blush Atelier · Tienda de belleza</span>
           <span>Demo · COP · Sin afiliación con las marcas</span>
         </div>
       </footer>
@@ -111,7 +111,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           }
         >
           <Icon name="home" />
-          <span>Colección</span>
+          <span>Tienda</span>
         </NavLink>
         <NavLink to="/carrito">
           <span className="mobile-cart-icon">

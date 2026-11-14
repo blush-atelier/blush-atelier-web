@@ -3,12 +3,11 @@ import {
   validateCard,
   type CardInput,
   type CardConfiguration,
-  type CardPreview,
 } from '../../domain/card';
 import {
   cardEnabled,
   loadCardConfiguration,
-  prepareCardCheckout,
+  payWithCard,
   clearCard,
   refreshPayment,
 } from '../../application/operations';
@@ -105,7 +104,6 @@ export function CheckoutDialog() {
     Partial<Record<keyof CardInput, string>>
   >({});
   const [terms, setTerms] = useState<CardConfiguration | null>(null);
-  const [preview, setPreview] = useState<CardPreview | null>(null);
   const connect = async () => {
     const result = await dispatch(loadCardConfiguration());
     if (result.ok) setTerms(result.value);
@@ -125,7 +123,6 @@ export function CheckoutDialog() {
   const busy = checkout.phase !== 'idle';
   useEffect(() => {
     if (!open) return;
-    if (dispatch(cardEnabled())) void connect();
     opener.current = document.activeElement as HTMLElement;
     const previous = document.body.style.overflow;
     dialog.current?.showModal();
@@ -137,31 +134,23 @@ export function CheckoutDialog() {
       if (opener.current?.isConnected) opener.current.focus();
       setForm(blankForm);
       setCard(blankCard);
-      setPreview(null);
       dispatch(clearCard());
       setErrors({});
     };
   }, [open]);
+  useEffect(() => {
+    if (open && checkout.step === 'review' && dispatch(cardEnabled()))
+      void connect();
+  }, [open, checkout.step]);
   useEffect(() => {
     if (open) {
       heading.current?.focus({ preventScroll: true });
       // El scroll del formulario no debe ocultar el inicio del resumen.
       if (dialog.current) dialog.current.scrollTop = 0;
     }
-  }, [checkout.step, open]);
+  }, [checkout.step, checkout.paymentInProgress, open]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (cardMode) {
-      const cardIssues = validateCard(card);
-      setCardErrors(cardIssues);
-      const firstCard = Object.keys(cardIssues)[0];
-      if (firstCard) {
-        dialog.current
-          ?.querySelector<HTMLInputElement>(`[name="card-${firstCard}"]`)
-          ?.focus();
-        return;
-      }
-    }
     const issues = checkout.transactionId ? {} : validateForm(form);
     setErrors(issues);
     const first = Object.keys(issues)[0];
@@ -171,6 +160,10 @@ export function CheckoutDialog() {
         ?.focus();
       return;
     }
+    await dispatch(prepareCheckout(form));
+  }
+  async function reserve(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (cardMode) {
       const issues = validateCard(card);
       setCardErrors(issues);
@@ -181,16 +174,12 @@ export function CheckoutDialog() {
           ?.focus();
         return;
       }
-      const result = await dispatch(prepareCardCheckout(form, card));
-      if (result) {
-        setPreview(result);
+      if (await dispatch(payWithCard(card))) {
         setCard(blankCard);
         setCardErrors({});
+        navigate('/pedido');
       }
-    } else await dispatch(prepareCheckout(form));
-  }
-  async function reserve() {
-    if (await dispatch(checkoutAndPay())) navigate('/pedido');
+    } else if (await dispatch(checkoutAndPay())) navigate('/pedido');
   }
   if (!open) return null;
   return (
@@ -230,18 +219,27 @@ export function CheckoutDialog() {
         </button>
       </div>
       <ol className="checkout-steps" aria-label="Pasos de tu compra">
-        <li className="is-active">
-          <span>
-            {checkout.step === 'review' ? <Icon name="check" /> : '01'}
-          </span>
-          {cardMode ? 'Tarjeta y entrega' : 'Entrega'}
-        </li>
-        <li
-          className={checkout.step === 'review' ? 'is-active' : ''}
-          aria-current={checkout.step === 'review' ? 'step' : undefined}
-        >
-          <span>02</span>Resumen
-        </li>
+        {[
+          ['01', 'Tus datos'],
+          ['02', 'Resumen y tarjeta'],
+          ['03', 'Procesando pago'],
+        ].map(([number, label], index) => {
+          const stage = checkout.paymentInProgress
+            ? 2
+            : checkout.step === 'details'
+              ? 0
+              : 1;
+          return (
+            <li
+              key={number}
+              className={index <= stage ? 'is-active' : ''}
+              aria-current={index === stage ? 'step' : undefined}
+            >
+              <span>{index < stage ? <Icon name="check" /> : number}</span>
+              {label}
+            </li>
+          );
+        })}
       </ol>
       <div className="dialog-body">
         {!cardMode && <ErrorNotice error={checkout.error} />}
@@ -317,19 +315,6 @@ export function CheckoutDialog() {
             >
               Revisar carrito
             </button>
-            {cardMode && (
-              <CardFields
-                value={card}
-                onChange={(value) => {
-                  setCard(value);
-                  setCardErrors({});
-                }}
-                errors={cardErrors}
-                terms={terms}
-                disabled={busy}
-                retry={() => void connect()}
-              />
-            )}
             {!checkout.transactionId && (
               <fieldset disabled={busy}>
                 <legend className="sr-only">Contacto y dirección</legend>
@@ -427,7 +412,7 @@ export function CheckoutDialog() {
                 disabled={busy}
                 type="submit"
               >
-                {busy ? 'Preparando resumen…' : 'Revisar mi pedido'}
+                {busy ? 'Preparando resumen…' : 'Completar pago'}
                 {!busy && <Icon name="arrow" />}
               </button>
             </div>
@@ -460,7 +445,6 @@ export function CheckoutDialog() {
                 disabled={busy || checkout.attempted}
                 onClick={() => {
                   dispatch(clearCard());
-                  setPreview(null);
                   setCard(blankCard);
                   dispatch(actions.checkoutEdited());
                 }}
@@ -471,44 +455,47 @@ export function CheckoutDialog() {
             <div className="review-amounts">
               <p className="eyebrow">RESUMEN DE TU PEDIDO</p>
               <OrderSummary quote={checkout.quote} />
-              <div className="payment-note">
-                <strong>
-                  {preview
-                    ? `${preview.brand} ···· ${preview.lastFour}`
-                    : 'Pago con tarjeta'}
-                </strong>
-                <p>
-                  El total incluye todos los cargos. Tu pago se confirmará de
-                  forma segura con Wompi.
-                </p>
-              </div>
-              {checkout.error?.code === 'QuoteChanged' && (
-                <button
-                  className="text-button"
-                  disabled={busy}
-                  onClick={() => void dispatch(refreshQuote())}
-                >
-                  Actualizar resumen
-                </button>
-              )}
-              <button
-                className="button button--dark"
-                disabled={busy || checkout.error?.code === 'QuoteChanged'}
-                onClick={() => {
-                  if (cardMode && !preview) {
-                    dispatch(actions.cardDetailsRequested());
-                    return;
-                  }
-                  void reserve();
-                }}
+              <form
+                onSubmit={reserve}
+                noValidate
+                className="review-payment-form"
               >
-                {busy
-                  ? 'Preparando compra…'
-                  : checkout.attempted
-                    ? 'Reintentar la misma reserva'
-                    : 'Continuar con el pago'}
-                {!busy && <Icon name="arrow" />}
-              </button>
+                {cardMode && (
+                  <CardFields
+                    value={card}
+                    onChange={(value) => {
+                      setCard(value);
+                      setCardErrors({});
+                    }}
+                    errors={cardErrors}
+                    terms={terms}
+                    disabled={busy}
+                    retry={() => void connect()}
+                  />
+                )}
+                {checkout.error?.code === 'QuoteChanged' && (
+                  <button
+                    className="text-button"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void dispatch(refreshQuote())}
+                  >
+                    Actualizar resumen
+                  </button>
+                )}
+                <button
+                  className="button button--dark"
+                  disabled={busy || checkout.error?.code === 'QuoteChanged'}
+                  type="submit"
+                >
+                  {busy
+                    ? 'Preparando compra…'
+                    : checkout.attempted
+                      ? 'Reintentar la misma reserva'
+                      : 'Registrar pago'}
+                  {!busy && <Icon name="arrow" />}
+                </button>
+              </form>
               <p className="safe-note">
                 Tu reserva queda identificada para evitar duplicados si
                 necesitas reintentar.

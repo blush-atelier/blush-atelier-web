@@ -70,7 +70,7 @@ export function CartPage() {
         <h1 tabIndex={-1}>Todo empieza con un esencial.</h1>
         <p>Encuentra ese pequeño toque que hará tuyo el día.</p>
         <Link className="button button--dark" to="/">
-          Explorar la colección
+          Explorar la tienda
           <Icon name="arrow" />
         </Link>
       </section>
