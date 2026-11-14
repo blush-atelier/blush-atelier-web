@@ -79,7 +79,7 @@ This document separates explicit requirements from optional improvements. The as
 - Backend: NestJS + TypeScript.
 - PostgreSQL + TypeORM; Docker Compose locally.
 - Jest in both apps (do not leave Vite's default Vitest as the only test runner).
-- AWS: S3 + CloudFront for frontend; Lambda + API Gateway for backend; evaluate RDS PostgreSQL for database.
+- AWS: S3 + CloudFront for frontend; Docker on EC2 for backend; RDS PostgreSQL. This approved delivery replaces the initial Lambda/API Gateway proposal.
 - Wompi Sandbox only in every environment.
 - Permanent branches: `development`, `staging`, `production`; short-lived `feature/*` branches. `production` is the delivery branch.
 - Development is local; staging validates releases; production is published in AWS. Evaluate costs before creating additional AWS environments.
