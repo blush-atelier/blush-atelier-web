@@ -72,7 +72,7 @@ npm run test:cov
 npm run build
 ```
 
-Jest: **128 pruebas**, 11 suites. Cobertura local medida: **96,69% statements · 94,06% branches · 98,07% functions · 96,63% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
+Jest: **130 pruebas**, 11 suites. Cobertura local medida: **96,63% statements · 94,01% branches · 98,07% functions · 96,56% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
 
 CI ejecuta `npm ci` y todos los comandos anteriores en PR hacia development/staging/production y pushes a esas ramas o feature/*. La promoción es `feature/* → development → staging → production`; requiere configurar protecciones en GitHub. Workflow definido; ejecución remota pendiente. CD todavía no está habilitado.
 
@@ -83,7 +83,16 @@ Verificación visual en Chrome de Windows: los nueve tamaños solicitados, desde
 ## Pago Sandbox y entrega pendiente
 
 Configura Wompi en el `.env` del backend según su README y reinicia la API. No añadas
-llaves Wompi al frontend. El Widget se carga desde su URL oficial cuando vas a pagar;
+llaves Wompi al frontend. Para UAT, configura en `.env` del frontend:
+
+```dotenv
+VITE_WOMPI_WIDGET_URL=https://checkout.co.uat.wompi.dev/widget.js
+```
+
+Reinicia Vite y recarga la página después de cambiar de ambiente. Si no se define,
+se selecciona el Widget UAT para llaves stagtest y el público para llaves test.
+El API y el Widget deben pertenecer al mismo ambiente; no se carga un SDK de otro host.
+El Widget se carga desde su URL oficial cuando vas a pagar;
 PAN/CVV se recogen allí. Redux/localStorage solo conservan progreso e ID de proveedor,
 nunca sesión firmada, secretos ni tarjeta. No se instalaron dependencias nuevas.
 

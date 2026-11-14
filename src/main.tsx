@@ -8,7 +8,7 @@ import { createHttpApi } from './infrastructure/http-api';
 import { browserProgress, newRequestKey } from './infrastructure/progress';
 import { App } from './presentation/App';
 const store = createAppStore({
-  payment: createWompiWidget(),
+  payment: createWompiWidget(__WOMPI_WIDGET_URL__),
   api: createHttpApi(__API_BASE_URL__),
   progress: browserProgress(),
   runtime: { newKey: newRequestKey },

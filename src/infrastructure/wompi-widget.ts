@@ -24,11 +24,16 @@ declare global {
     WidgetCheckout?: WidgetConstructor;
   }
 }
-const scriptUrl = 'https://checkout.wompi.co/widget.js';
-export function createWompiWidget(): PaymentWidgetPort {
+const publicWidget = 'https://checkout.wompi.co/widget.js';
+const uatWidget = 'https://checkout.co.uat.wompi.dev/widget.js';
+export function createWompiWidget(configuredUrl = ''): PaymentWidgetPort {
   let loading: Promise<boolean> | null = null;
   let active = false;
-  function load(): Promise<boolean> {
+  function load(scriptUrl: string): Promise<boolean> {
+    // No se mezclan dos SDK en la misma página: si cambió el ambiente hay que recargarla.
+    const otherUrl = scriptUrl === uatWidget ? publicWidget : uatWidget;
+    if (document.querySelector(`script[src="${otherUrl}"]`))
+      return Promise.resolve(false);
     if (window.WidgetCheckout) return Promise.resolve(true);
     if (loading) return loading;
     loading = new Promise((resolve) => {
@@ -60,13 +65,19 @@ export function createWompiWidget(): PaymentWidgetPort {
         observer: null,
       };
       try {
+        const expectedUrl = session.publicKey.startsWith('pub_stagtest')
+          ? uatWidget
+          : publicWidget;
+        const scriptUrl = configuredUrl || expectedUrl;
+        if (scriptUrl !== expectedUrl)
+          return { ok: false, error: 'PaymentWidgetUnavailable' };
         if (
           !/^pub_(?:test_|stagtest)[A-Za-z0-9_-]+$/.test(session.publicKey) ||
           !/^[1-9][0-9]{0,18}$/.test(session.amountMinor) ||
           BigInt(session.amountMinor) > BigInt(Number.MAX_SAFE_INTEGER) ||
           !Number.isFinite(Date.parse(session.expiresAt)) ||
           Date.parse(session.expiresAt) <= Date.now() ||
-          !(await load()) ||
+          !(await load(scriptUrl)) ||
           !window.WidgetCheckout
         )
           return { ok: false, error: 'PaymentWidgetUnavailable' };

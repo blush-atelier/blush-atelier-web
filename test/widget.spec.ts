@@ -24,9 +24,7 @@ function install() {
 afterEach(() => {
   delete window.WidgetCheckout;
   document
-    .querySelectorAll(
-      '.waybox-modal,script[src="https://checkout.wompi.co/widget.js"]',
-    )
+    .querySelectorAll('.waybox-modal,script[src$="/widget.js"]')
     .forEach((e) => e.remove());
   jest.useRealTimers();
 });
@@ -143,4 +141,37 @@ it('no rechaza localmente una llave stagtest de la prueba', async () => {
   await opened();
   modal.hidden = true;
   expect((await pending).ok).toBe(true);
+});
+
+it('carga el SDK UAT real por URL para una sesión stagtest, sin usar el Widget público', async () => {
+  const pending = createWompiWidget().open({
+    ...paymentSession,
+    publicKey: 'pub_stagtest_fixture',
+  });
+  const script = document.querySelector<HTMLScriptElement>(
+    'script[src="https://checkout.co.uat.wompi.dev/widget.js"]',
+  );
+  expect(script).not.toBeNull();
+  expect(
+    document.querySelector('script[src="https://checkout.wompi.co/widget.js"]'),
+  ).toBeNull();
+  install();
+  script!.dispatchEvent(new Event('load'));
+  await opened();
+  modal.hidden = true;
+  expect((await pending).ok).toBe(true);
+});
+it('rechaza host arbitrario o configuración cruzada sin enviarle datos del pedido', async () => {
+  install();
+  for (const url of [
+    'https://attacker.example/widget.js',
+    'https://checkout.wompi.co/widget.js',
+  ]) {
+    expect(
+      await createWompiWidget(url).open({
+        ...paymentSession,
+        publicKey: 'pub_stagtest_fixture',
+      }),
+    ).toEqual({ ok: false, error: 'PaymentWidgetUnavailable' });
+  }
 });
