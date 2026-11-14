@@ -1,21 +1,24 @@
 # Blush Atelier Web
 
-Tienda de cosméticos mobile-first: React, TypeScript, Vite y Redux Toolkit.
-Repositorio independiente del backend NestJS. Pagos exclusivamente Wompi Sandbox.
+Tienda de cosméticos desarrollada con React, TypeScript, Vite y Redux Toolkit.
+Incluye catálogo, carrito, entrega, resumen de compra y pago con tarjeta mediante
+Wompi Sandbox. El backend NestJS se mantiene en un repositorio independiente.
 
-| Entrega          | URL                                                                     |
-| ---------------- | ----------------------------------------------------------------------- |
-| Tienda publicada | [Blush Atelier](https://dviblid28pd4o.cloudfront.net/)                  |
-| API pública      | [Catálogo JSON](https://dviblid28pd4o.cloudfront.net/api/products)      |
-| Swagger          | [API interactiva](https://dviblid28pd4o.cloudfront.net/api/docs)        |
-| Frontend         | [blush-atelier-web](https://github.com/blush-atelier/blush-atelier-web) |
-| Backend          | [blush-atelier-api](https://github.com/blush-atelier/blush-atelier-api) |
+## Enlaces
 
-## Ejecutar localmente
+| Servicio | URL                                                |
+| -------- | -------------------------------------------------- |
+| Tienda   | https://dviblid28pd4o.cloudfront.net/              |
+| API      | https://blush-atelier-api.duckdns.org/api/products |
+| Swagger  | https://dviblid28pd4o.cloudfront.net/api/docs      |
+| OpenAPI  | https://dviblid28pd4o.cloudfront.net/api/docs-json |
+| Backend  | https://github.com/blush-atelier/blush-atelier-api |
 
-Requiere Node 22 (`.nvmrc`). Primero inicia el backend con PostgreSQL migrado y seed,
-siguiendo su [README](https://github.com/blush-atelier/blush-atelier-api#readme).
-Desde la raíz de este repositorio:
+## Instalación y ejecución local
+
+Requiere Node.js 22 (`.nvmrc`) y npm. Primero inicia PostgreSQL y la API siguiendo
+el [README del backend](https://github.com/blush-atelier/blush-atelier-api#readme).
+Después, desde la raíz de este repositorio:
 
 ```bash
 nvm use
@@ -23,68 +26,89 @@ npm ci
 npm run dev
 ```
 
-Abre http://localhost:5173. Vite envía `/api` a http://127.0.0.1:3000 mediante proxy;
-no se necesita `.env` para el desarrollo habitual. Conserva el mismo host del navegador.
+Abre http://localhost:5173. Vite envía `/api` al backend local en el puerto 3000.
+No se necesita `.env` para esta configuración.
 
-Para otra API, copia `.env.example` a `.env` y define `VITE_API_BASE_URL` con su origen,
-sin `/api`. Reinicia Vite o reconstruye: las variables se incorporan durante el build.
-En AWS se usa el mismo origen web/API, por lo que se deja vacío. Todo `VITE_*` es
-público; nunca pongas llaves privadas, secretos Wompi ni contraseñas aquí.
+### Configurar otra API
 
-## Flujo de compra
+Copia `.env.example` a `.env` y configura `VITE_API_BASE_URL` con el origen de la
+API, sin `/api`. Reinicia Vite o reconstruye después del cambio. En AWS se deja
+vacío para utilizar `/api` en el mismo dominio CloudFront de la tienda.
+Las variables `VITE_*` son públicas: no deben contener contraseñas ni secretos.
+Las credenciales Wompi se configuran exclusivamente en el backend.
 
-1. Explora catálogo, busca/filtra por categoría o marca y abre el detalle con stock.
-2. Agrega productos al carrito, revisa unidades y pulsa **Pagar con tarjeta de crédito**.
-3. Completa **01 Tus datos**, contacto y entrega; departamento habilita las ciudades.
-4. **02 Resumen y tarjeta** muestra productos + tarifa base + envío en Backdrop.
-   Completa tarjeta y aceptaciones; se detecta Visa/Mastercard dentro del campo.
-5. **Registrar pago** tokeniza en Wompi, crea PENDING en nuestra API antes del cargo
-   y abre **03 Procesando pago** hasta recibir el estado verificado por el backend.
-6. Consulta el resultado/referencia y vuelve a **Tienda** con stock actualizado.
+## Cómo probar la compra
 
-El carrito admite varios productos y las tarifas se aplican una sola vez. Agregar
-productos no reserva: la reserva ocurre al crear PENDING. La aplicación consulta
-cada 2,5 segundos mientras el pedido está pendiente y visible, y al recuperar
-conexión/foco. Recargar restaura referencias seguras y consulta la API sin repetir cargos.
-Una sesión vencida permite iniciar otra selección sin recuperar permisos del pedido viejo.
+1. Abre la tienda, filtra el catálogo y consulta el detalle de un producto.
+2. Agrega uno o varios productos al carrito y revisa sus cantidades.
+3. Pulsa **Pagar con tarjeta de crédito** y completa contacto y dirección.
+   Elige primero departamento y después ciudad.
+4. Pulsa **Completar pago**. Revisa productos, tarifa base y envío en el resumen.
+5. Introduce una tarjeta de prueba, completa sus datos y acepta las condiciones.
+   Solo se admiten Visa y Mastercard; el logo se detecta al escribir el número.
+6. Pulsa **Registrar pago**. La aplicación muestra **03 · Procesando pago** mientras
+   el backend verifica el resultado con Wompi.
+7. Consulta el resultado y la referencia. Regresa a **Tienda** para comprobar el stock.
 
-Usa únicamente [tarjetas oficiales Sandbox](https://docs.wompi.co/docs/colombia/datos-de-prueba-en-sandbox/).
-La [guía del backend](https://github.com/blush-atelier/blush-atelier-api/blob/development/docs/checkout-testing.md)
-explica aprobación, rechazo, recarga, stock, duplicados y comprobaciones SQL.
+Usa únicamente los [datos oficiales de Wompi Sandbox](https://docs.wompi.co/docs/colombia/datos-de-prueba-en-sandbox/),
+con vencimiento futuro y los datos ficticios indicados para ese ambiente. No uses
+tarjetas reales. La tarifa total siempre se calcula en el backend.
 
-## Arquitectura y seguridad
+| Caso                       | Comprobación esperada                                        |
+| -------------------------- | ------------------------------------------------------------ |
+| Compra aprobada            | Resultado APPROVED y stock actualizado                       |
+| Compra rechazada           | Resultado DECLINED y stock físico conservado                 |
+| Recargar durante el pago   | Se recupera el pedido y se consulta sin repetir el cargo     |
+| Desconectar y reconectar   | Se informa el problema y se retoma la consulta del estado    |
+| Doble clic en pagar        | No se genera un segundo cargo                                |
+| Cantidad superior al stock | No permite continuar con una cantidad no disponible          |
+| Datos inválidos            | Validación antes del envío, con mensajes junto al formulario |
+| Sesión vencida             | Permite iniciar otra compra con una nueva sesión             |
+
+El seguimiento del pedido es automático mientras está pendiente y visible.
+No es necesario actualizar manualmente. Con una sesión activa, **Mi pedido** permite
+consultar la referencia. Si el pago todavía no se envió, una recarga solicita
+nuevamente la tarjeta: sus datos no se almacenan.
+
+## Arquitectura
 
 ```mermaid
 flowchart LR
-  UI[React / presentación] --> APP[Casos de uso / Redux Toolkit]
+  UI[React] --> APP[Casos de uso y Redux Toolkit]
   APP --> PORT[Puertos y Result del dominio]
   HTTP[Adaptador HTTP] -. implementa .-> PORT
-  STORAGE[Progreso seguro localStorage] -. implementa .-> PORT
-  HTTP --> API[NestJS / PostgreSQL]
+  STORAGE[Persistencia segura] -. implementa .-> PORT
+  HTTP --> EDGE[CloudFront: /api/*]
+  EDGE --> API[NestJS en Docker / EC2]
+  API --> DB[(PostgreSQL RDS)]
   CARD[Tokenización JWE] -. implementa .-> PORT
   CARD --> WOMPI[Wompi Sandbox]
 ```
 
-`domain`: contratos, validaciones y dinero; `application`: casos de uso, acciones y
-estado Redux; `infrastructure`: adaptadores HTTP, almacenamiento y tokenización;
-`presentation`: páginas, componentes y CSS. Redux sigue Flux: acciones → reducers
-→ estado → UI. Los fallos esperados usan `Result`, sin reglas de pago en componentes.
+- `src/domain`: contratos, validaciones y representación de importes.
+- `src/application`: casos de uso, acciones, reducers y estado de checkout.
+- `src/infrastructure`: adaptadores HTTP, almacenamiento y tokenización.
+- `src/presentation`: páginas, componentes, estilos y accesibilidad.
 
-Importes en strings de centavos, cálculos/formato con `BigInt`. El backend decide
-precio, tarifas, disponibilidad y resultado. [Modelo PostgreSQL y ERD](https://github.com/blush-atelier/blush-atelier-api#arquitectura-y-modelo-de-datos).
+Redux sigue el flujo acciones → reducers → estado → interfaz. Los casos de uso
+emplean `Result` para los fallos esperados. Los importes viajan como strings de
+centavos y se formatean con `BigInt`; el backend decide precios, tarifas y stock.
 
-Número/CVC solo viven en memoria del formulario, se cifran con JWE mediante Web Crypto
-y viajan directamente a Wompi por HTTPS. El token es efímero; no se guarda en Redux,
-localStorage ni logs. La API recibe el token, nunca la tarjeta. Se persisten solo
-referencias y progreso seguro; contacto y dirección permanecen en memoria.
-[Seguridad de pagos](https://github.com/blush-atelier/blush-atelier-api/blob/development/docs/payment-security.md).
+[Modelo de datos y ERD](https://github.com/blush-atelier/blush-atelier-api#arquitectura-y-modelo-de-datos).
 
-CSS nativo con Grid/Flexbox, tokens y estilos por responsabilidad. Tipografías
-Montserrat/Bodoni Moda locales con licencias OFL; selectores accesibles con Radix.
-Imágenes con dimensiones, carga diferida y fallback; microinteracciones respetan
-`prefers-reduced-motion`. Logos Visa/Mastercard de Simple Icons, CC0; licencias locales.
+## Seguridad y diseño
 
-## Calidad
+El formulario cifra la tarjeta con JWE mediante Web Crypto y la envía directamente
+a Wompi por HTTPS. PAN/CVC y el token de tarjeta no se guardan en Redux, localStorage
+ni logs. El backend recibe únicamente el token y verifica el resultado del pago.
+La persistencia local contiene solo referencias y progreso seguro del checkout.
+
+El diseño utiliza CSS nativo, Grid/Flexbox, tipografías locales y layouts mobile-first.
+Incluye navegación por teclado, foco visible, validaciones y movimiento reducido.
+Los selectores utilizan Radix con estilos propios. Las licencias de fuentes y logos
+se incluyen junto a sus archivos.
+
+## Pruebas automatizadas
 
 ```bash
 npm run format:check
@@ -94,25 +118,26 @@ npm run test:cov
 npm run build
 ```
 
-Última medición: **139 pruebas, 13 suites**. Cobertura Jest:
-**96,88% sentencias · 92,66% ramas · 97,33% funciones · 96,81% líneas**.
-Umbral global 81% en las cuatro métricas; incluye todo `src`.
-Reporte local: `coverage/lcov-report/index.html` (no versionado).
+Jest: **139 pruebas, 13 suites**. Cobertura registrada: **96,88% sentencias,
+92,66% ramas, 97,33% funciones y 96,81% líneas**. Umbral global: 81%.
+Reporte generado en `coverage/lcov-report/index.html`.
 
-La usuaria confirmó el ciclo de compra y el responsive de la versión actual.
-Las capturas en `docs/visual-review/` corresponden a una revisión anterior: no prueban
-el modal actual. Pendiente dejar evidencia del checkout publicado en AWS y pruebas
-con Firefox/Safari; no se dan por verificadas pantallas que la herramienta no observó.
+## Build y despliegue
 
-## AWS y CI
+```bash
+npm run build
+npm run preview
+```
 
-`npm run build` genera `dist/` para S3 y CloudFront. El comportamiento `/api/*` debe
-apuntar al backend y el resto a S3. Configura recuperación de rutas SPA (`/carrito`,
-`/pedido`, detalle) sin transformar errores de API en HTML. Conserva `.env`/secretos
-fuera de `dist/`; configura cabeceras de seguridad en CloudFront y caché de assets.
-No publiques ni invalides caché sin aprobar el despliegue.
+El build se genera en `dist/`. El despliegue utiliza S3 y CloudFront; `/api/*` apunta
+al backend HTTPS en EC2, conectado a PostgreSQL RDS. El frontend no contiene secretos
+Wompi ni credenciales de base de datos.
 
-GitHub Actions ejecuta `npm ci`, formato, lint, typecheck, Jest con cobertura y build.
-Promoción por PR: `feature/* → development → staging → production`. CD automático
-no habilitado. La configuración efectiva de protecciones se verifica en GitHub.
-[Requisitos](docs/requirements.md).
+## Limitaciones conocidas
+
+- La emisión de webhooks reales desde Wompi no se confirmó por falta de acceso al
+  dashboard. El receptor está probado con eventos simulados y el backend consulta
+  el estado mediante la API privada para confirmar el pago.
+
+[Requisitos](docs/requirements.md) ·
+[Casos de prueba de API y stock](https://github.com/blush-atelier/blush-atelier-api/blob/development/docs/checkout-testing.md).
