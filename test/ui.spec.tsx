@@ -47,6 +47,8 @@ async function openDetails(user: ReturnType<typeof userEvent.setup>) {
     await user.click(
       await screen.findByRole('button', { name: 'Agregar al carrito' }),
     );
+  if (screen.queryByRole('dialog', { name: 'Tu selección.' }))
+    await user.click(screen.getByRole('link', { name: 'Revisar carrito' }));
   await user.click(
     await screen.findByRole('button', { name: 'Continuar con la entrega' }),
   );
@@ -58,10 +60,18 @@ async function fill(user: ReturnType<typeof userEvent.setup>) {
     ['Correo electrónico', form.email],
     ['Teléfono de contacto', form.phone],
     ['Dirección de entrega', form.addressLine],
-    ['Ciudad', form.city],
-    ['Departamento', form.region],
   ])
     await user.type(screen.getByLabelText(label), value);
+  await selectOption(
+    user,
+    screen.getByRole('combobox', { name: 'Departamento' }),
+    form.region,
+  );
+  await selectOption(
+    user,
+    screen.getByRole('combobox', { name: 'Ciudad' }),
+    form.city,
+  );
 }
 const failure = (code: ApiError['code'], status = 400) => ({
   ok: false as const,
@@ -200,7 +210,7 @@ describe('UI conectada mediante los puertos', () => {
     );
     await screen.findByRole('heading', { name: 'Rubor Rose' });
     expect(api.listProducts.mock.calls.length).toBeGreaterThan(1);
-  });
+  }, 10000);
   test('cerrar y Escape descartan datos personales del formulario', async () => {
     const { user } = setup(`/producto/${productId}`);
     await openDetails(user);
@@ -520,4 +530,65 @@ test('retomar una compra ya creada abre su estado sin crear otra transacción', 
   ).toBeVisible();
   expect(api.getTransaction).toHaveBeenCalledWith(transaction.id);
   expect(api.createPending).not.toHaveBeenCalled();
+});
+
+test('ciudades dependen del departamento y cambiarlo borra la ciudad anterior', async () => {
+  const { user, api } = setup(`/producto/${productId}`);
+  await openDetails(user);
+  const region = screen.getByRole('combobox', { name: 'Departamento' });
+  const city = screen.getByRole('combobox', { name: 'Ciudad' });
+  expect(city).toBeDisabled();
+  await selectOption(user, region, 'Amazonas');
+  expect(city).toBeEnabled();
+  await user.click(city);
+  expect(screen.getByRole('option', { name: 'Leticia' })).toBeVisible();
+  expect(
+    screen.queryByRole('option', { name: 'Bogotá' }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole('option', { name: 'Leticia' }));
+  await selectOption(user, region, 'Bogotá D.C.');
+  expect(city).toHaveTextContent('Selecciona tu ciudad o municipio');
+  await user.click(city);
+  expect(screen.getAllByRole('option')).toHaveLength(1);
+  await user.click(screen.getByRole('option', { name: 'Bogotá' }));
+  await user.click(screen.getByRole('button', { name: 'Revisar mi pedido' }));
+  expect(api.registerDelivery).not.toHaveBeenCalled();
+});
+
+test('añadir abre vista lateral sin navegar, acumula y devuelve el foco al cerrar', async () => {
+  const { user, store, api } = setup(`/producto/${productId}`);
+  const add = await screen.findByRole('button', { name: 'Agregar al carrito' });
+  await user.click(add);
+  expect(screen.getByRole('dialog', { name: 'Tu selección.' })).toBeVisible();
+  expect(screen.getByText('Cantidad: 1')).toBeVisible();
+  expect(api.createPending).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Seguir comprando' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(add).toHaveFocus();
+  expect(
+    screen.getByRole('heading', { name: 'Rubor Rose', level: 1 }),
+  ).toBeVisible();
+  await user.click(add);
+  expect(screen.getByText('Cantidad: 2')).toBeVisible();
+  expect(store.getState().checkout.items[0].quantity).toBe(2);
+  fireEvent(
+    screen.getByRole('dialog'),
+    new Event('cancel', { bubbles: true, cancelable: true }),
+  );
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(document.body.style.overflow).toBe('');
+  await user.click(add);
+  await user.click(
+    screen.getByRole('button', { name: 'Cerrar vista del carrito' }),
+  );
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  await user.click(add);
+  fireEvent.click(screen.getByRole('dialog'), { clientX: -10, clientY: -10 });
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  await user.click(add);
+  await user.click(screen.getByRole('link', { name: 'Revisar carrito' }));
+  expect(
+    await screen.findByRole('heading', { name: 'Tu próximo ritual.' }),
+  ).toBeVisible();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });

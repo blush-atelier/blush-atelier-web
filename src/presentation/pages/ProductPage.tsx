@@ -7,7 +7,7 @@ import { ProductArt } from '../components/ProductArt';
 import { Icon } from '../components/Icon';
 import type { ApiError } from '../../domain/contracts';
 import { ErrorNotice, Loading } from '../components/Feedback';
-export function ProductPage() {
+export function ProductPage({ onAdded }: { onAdded: () => void }) {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,7 +51,8 @@ export function ProductPage() {
   const begin = () => {
     const result = dispatch(addToCart(product.id, quantity));
     if (result.ok) {
-      navigate('/carrito');
+      setCartError(null);
+      onAdded();
       return;
     }
     if (result.error === 'CheckoutLocked') {

@@ -1,6 +1,6 @@
 # Acceptance checklist — tick off with evidence
 
-Auditoría consolidada del 13/11/2026: [matriz y plan mínimo en el repositorio backend](../../blush-atelier-api/docs/delivery-audit.md). Los apartados de evidencia de abajo registran hitos históricos; no prueban pagos Wompi ni AWS. Medición actual: API 111 + 23 integración, WEB 99 pruebas; ambos >80% en las cuatro métricas.
+Auditoría consolidada del 13/11/2026: [matriz y plan mínimo en el repositorio backend](../../blush-atelier-api/docs/delivery-audit.md). Los apartados de evidencia de abajo registran hitos históricos; no prueban pagos Wompi ni AWS. Medición actual: API 111 + 23 integración, WEB 101 pruebas; ambos >80% en las cuatro métricas.
 
 Frontend local: catálogo → entrega → resumen → reserva PENDING. Evidencia y límites en [README](../README.md) y [notas](decisions-and-interview-notes.md). Los pagos y AWS siguen pendientes. Las pruebas de estados finales usan respuestas simuladas de API; no prueban Wompi.
 
@@ -217,3 +217,19 @@ no acredita integración real ni pagos Wompi. Capturas antes/después en visual-
 - [x] 99 pruebas Jest, lint, typecheck y build correctos; cobertura de líneas 97,83%.
 
 La comprobación visual usó respuestas de API simuladas; no es evidencia de pago Wompi.
+
+## Último ajuste UX y cierre de entrega
+
+- [x] dialog-actions vuelve al flujo normal y deja de superponerse al formulario.
+- [x] Departamento antes de Ciudad; fuente DIVIPOLA local, 32 departamentos + Bogotá D.C.; cambiar departamento limpia ciudad.
+- [x] Agregar abre panel lateral, conserva ruta y Redux, sin reservar; cierre explícito/Escape y movimiento reducido.
+- [x] 101 pruebas frontend; lint, typecheck y build correctos; todas las métricas de cobertura >80%.
+- [ ] Captura/validación de tarjeta y checkout Wompi Sandbox real, no solo PENDING.
+- [ ] Verificación del proveedor, webhook auténtico/idempotente y stock/entrega finales.
+- [ ] Probar F5, timeout/reintento, rechazo y eventos duplicados en el ciclo de pago.
+- [ ] Mantener Jest >80% al añadir pago y revisar navegadores adicionales.
+- [ ] AWS conectado con HTTPS, DB protegida, cookies/CORS y E2E público Sandbox.
+- [ ] README reproducido desde clon limpio, URLs app/API/Swagger y evidencia final.
+
+La brecha de los 100 puntos base y 50 bonus se detalla en la auditoría backend;
+no se declaran puntos concedidos ni AWS/Wompi funcionando sin verificarlos.

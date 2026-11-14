@@ -181,6 +181,7 @@ test('agregar otro producto conserva ambos y permite editar y retirar cada líne
   await user.click(
     await screen.findByRole('button', { name: 'Agregar al carrito' }),
   );
+  await user.click(screen.getByRole('link', { name: 'Revisar carrito' }));
   await screen.findByRole('heading', { name: 'Tu próximo ritual.' });
   expect(screen.getByRole('article', { name: product.name })).toBeVisible();
   expect(screen.getByRole('article', { name: lipstick.name })).toBeVisible();

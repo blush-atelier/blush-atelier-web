@@ -31,8 +31,8 @@ Vite envía `/api` al backend local mediante proxy: no necesitas `.env` en el fr
 ## Qué probar
 
 1. Explora Bases, Correctores, Sombras o Accesorios; busca y filtra por categoría o marca (MAC, Too Faced, Bloomshell, Atenea); entra al detalle y cambia la cantidad.
-2. Pulsa **Agregar al carrito**. Agrega distintos productos desde la colección. Revisa cada cantidad y el subtotal; puedes cambiar unidades o eliminar cada producto antes de continuar con la entrega.
-3. Pulsa **Continuar con la entrega**. El formulario vacío debe marcar errores; completa datos ficticios válidos.
+2. Pulsa **Agregar al carrito**. Agrega distintos productos desde la colección. Se abre una vista lateral sin salir del producto; puedes seguir comprando o pulsar Revisar carrito para cambiar unidades y eliminar líneas antes de continuar.
+3. Pulsa **Continuar con la entrega**. El formulario vacío debe marcar errores; completa datos ficticios válidos. Elige Departamento y después Ciudad / municipio; cambiar departamento limpia la ciudad.
 4. Revisa producto + tarifa base + envío en el resumen de dos capas (Backdrop). **Ver mis productos** despliega la selección (Ver mi producto si elegiste uno). Pulsa **Continuar con el pago**: por ahora crea el pedido/reserva `PENDING`, sin cobros; Wompi sigue pendiente.
 5. Refresca `/pedido`: se consulta el estado en API. Vuelve a la colección para ver el stock actualizado.
 6. En DevTools prueba 320, 375, 768 y 1440 px; usa Tab y Escape en el modal. Desconecta la red y revisa el error/reintento.
@@ -72,7 +72,7 @@ npm run test:cov
 npm run build
 ```
 
-Jest: **99 pruebas**, 9 suites. Cobertura local medida: **97,92% statements · 96,40% branches · 98,10% functions · 97,83% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
+Jest: **101 pruebas**, 9 suites. Cobertura local medida: **98,04% statements · 95,73% branches · 98,25% functions · 97,94% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
 
 CI ejecuta `npm ci` y todos los comandos anteriores en PR hacia development/staging/production y pushes a esas ramas o feature/*. La promoción es `feature/* → development → staging → production`; requiere configurar protecciones en GitHub. Workflow definido; ejecución remota pendiente. CD todavía no está habilitado.
 

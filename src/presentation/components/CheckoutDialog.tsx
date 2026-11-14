@@ -10,6 +10,8 @@ import {
 } from '../../application/operations';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { Icon } from './Icon';
+import { AtelierSelect } from './AtelierSelect';
+import locations from '../data/colombia-locations.json';
 import { ProductArt } from './ProductArt';
 import { SummaryBackdrop } from './SummaryBackdrop';
 import { OrderSummary } from './OrderSummary';
@@ -60,22 +62,9 @@ const fields: {
     autoComplete: 'street-address',
     maxLength: 250,
   },
-  {
-    name: 'city',
-    label: 'Ciudad',
-    placeholder: 'Tu ciudad',
-    autoComplete: 'address-level2',
-    maxLength: 100,
-  },
-  {
-    name: 'region',
-    label: 'Departamento',
-    placeholder: 'Tu departamento',
-    autoComplete: 'address-level1',
-    maxLength: 100,
-  },
 ];
 export function CheckoutDialog() {
+  const departments = locations as Record<string, string[]>;
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const checkout = useAppSelector((state) => state.checkout);
@@ -272,6 +261,47 @@ export function CheckoutDialog() {
                     )}
                   </div>
                 ))}
+                <AtelierSelect
+                  label="Departamento"
+                  name="region"
+                  placeholder="Selecciona un departamento"
+                  value={form.region}
+                  options={Object.keys(departments).map((value) => ({
+                    value,
+                    label: value,
+                  }))}
+                  disabled={busy}
+                  error={errors.region}
+                  onChange={(region) => {
+                    setForm((value) => ({ ...value, region, city: '' }));
+                    setErrors((value) => ({
+                      ...value,
+                      region: undefined,
+                      city: undefined,
+                    }));
+                  }}
+                />
+                <AtelierSelect
+                  label="Ciudad / municipio"
+                  accessibleLabel="Ciudad"
+                  name="city"
+                  placeholder={
+                    form.region
+                      ? 'Selecciona tu ciudad o municipio'
+                      : 'Primero elige un departamento'
+                  }
+                  value={form.city}
+                  options={(departments[form.region] ?? []).map((value) => ({
+                    value,
+                    label: value,
+                  }))}
+                  disabled={busy || !form.region}
+                  error={errors.city}
+                  onChange={(city) => {
+                    setForm((value) => ({ ...value, city }));
+                    setErrors((value) => ({ ...value, city: undefined }));
+                  }}
+                />
               </div>
             </fieldset>
             <div className="payment-note">

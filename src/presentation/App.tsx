@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import { resumeCheckout } from '../application/operations';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { Shell } from './components/Shell';
+import { CartDrawer } from './components/CartDrawer';
 import { CheckoutDialog } from './components/CheckoutDialog';
 import { CataloguePage } from './pages/CataloguePage';
 import { ProductPage } from './pages/ProductPage';
@@ -10,6 +11,7 @@ import { CartPage } from './pages/CartPage';
 import { OrderPage } from './pages/OrderPage';
 import './styles.css';
 export function App() {
+  const [cartPreview, setCartPreview] = useState(false);
   const dispatch = useAppDispatch();
   const warning = useAppSelector((state) => state.persistenceWarning);
   useEffect(() => {
@@ -25,7 +27,10 @@ export function App() {
       )}
       <Routes>
         <Route path="/" element={<CataloguePage />} />
-        <Route path="/producto/:id" element={<ProductPage />} />
+        <Route
+          path="/producto/:id"
+          element={<ProductPage onAdded={() => setCartPreview(true)} />}
+        />
         <Route path="/carrito" element={<CartPage />} />
         <Route path="/pedido" element={<OrderPage />} />
         <Route
@@ -42,6 +47,7 @@ export function App() {
         />
       </Routes>
       <CheckoutDialog />
+      {cartPreview && <CartDrawer onClose={() => setCartPreview(false)} />}
     </Shell>
   );
 }

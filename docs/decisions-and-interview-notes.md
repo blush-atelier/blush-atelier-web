@@ -306,3 +306,44 @@ Verificado con Chrome y API simulada en catálogo, detalle, carrito y pedido a
 escritorio cubre todo el ancho y permanece arriba al hacer scroll. Inspección de la
 captura de catálogo a 1440 px. Formato, lint, typecheck, build y 99 pruebas Jest
 correctos; cobertura sin cambios. No acredita pagos ni despliegue.
+
+## Entrega dependiente y vista lateral del carrito — 13/11/2026
+
+El footer del formulario deja de ser sticky: el fondo y el borde de dialog-actions
+se superponían a los datos durante el scroll. Ahora es parte del flujo del formulario.
+
+Departamento precede Ciudad / municipio. Los datos se incluyen localmente desde
+[DIVIPOLA DANE](https://www.datos.gov.co/Mapas-Nacionales/DIVIPOLA-C-digos-municipios/gdxc-w37w),
+consultado el 13/11/2026 (corte declarado por la fuente: 30/12/2024): 32 departamentos
+y Bogotá D.C., 1122 localidades, incluidos registros de áreas no municipalizadas/isla.
+Se guarda solo departamento y nombre de localidad, no coordenadas. Bogotá D.C. se
+presenta como destino separado, sin convertirlo en departamento de Cundinamarca.
+El JSON es una instantánea, no una promesa de actualización automática o de cobertura
+logística. Para actualizarlo, descargar todos los registros del recurso gdxc-w37w,
+agrupar dpto/nom_mpio y revisar las diferencias. No se consulta un servicio externo
+al comprar. Cambiar departamento limpia la ciudad; sin departamento Ciudad está deshabilitada.
+Los mismos strings region/city llegan a la API, sin cambiar su contrato.
+AtelierSelect coloca el portal dentro del dialog cuando corresponde: un z-index alto
+por sí solo no permite que un menú del body supere la capa de un modal nativo.
+
+Agregar al carrito conserva la ruta y abre CartDrawer. Es estado de presentación
+local de React; productos y cantidades siguen en Redux, y agregar no reserva stock.
+El panel muestra todas las líneas y un subtotal orientativo, nunca reemplaza la
+cotización de servidor. Cierre mediante X, Escape, clic fuera o Seguir comprando;
+no hay temporizador que interrumpa la lectura. Revisar carrito es navegación explícita.
+El diálogo nativo contiene foco y bloquea interacción de fondo; el cierre restaura
+scroll/foco. Si falta información de un producto recuperado, no se inventa su importe.
+Animación lateral y pulso del icono solo con no-preference; móvil usa ancho completo.
+
+Jest añade dependencia de ciudades/cambio de departamento y abrir/acumular/cerrar el
+panel sin navegación. El test integral de compra dispone de 10 s por sus múltiples
+pasos reales de UI; no se retiraron aserciones ni se cambiaron umbrales de cobertura.
+101 pruebas correctas; sentencias 98,04%, ramas 95,73%, funciones 98,25%, líneas 97,94%.
+Lint, typecheck y build correctos. Wompi no se implementa en esta revisión.
+
+Verificación del último ajuste: Chrome de Windows con API simulada en los nueve
+viewports del brief, animaciones activas. Abrir panel sin cambiar ruta, Escape,
+carrito/entrega, departamento y ciudades dependientes; menús dentro de límites del
+modal/viewport y sin overflow. Inspección de capturas de panel a 320/1440 y formulario
+a 320 px. No acredita proveedor ni navegadores distintos. Movimiento reducido
+comprobado previamente a 320/375/1440, y excluido de las nuevas animaciones por CSS.

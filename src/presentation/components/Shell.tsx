@@ -70,7 +70,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </Link>
         <NavLink to="/carrito" className="order-link">
           <span>Carrito</span>
-          <Icon name="bag" />
+          <Icon name="bag" key={`bag-${quantity}`} />
           {quantity > 0 && (
             <span
               className="selection-count"
@@ -115,7 +115,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </NavLink>
         <NavLink to="/carrito">
           <span className="mobile-cart-icon">
-            <Icon name="bag" />
+            <Icon name="bag" key={`bag-${quantity}`} />
             {quantity > 0 && (
               <span className="selection-count" aria-hidden="true">
                 {quantity}

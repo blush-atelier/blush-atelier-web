@@ -15,6 +15,8 @@ export function AtelierSelect({
   onChange,
   disabled = false,
   error,
+  placeholder,
+  name,
 }: {
   label: string;
   accessibleLabel?: string;
@@ -23,8 +25,11 @@ export function AtelierSelect({
   onChange: (value: string) => void;
   disabled?: boolean;
   error?: string;
+  placeholder?: string;
+  name?: string;
 }) {
   const id = useId();
+  const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState<HTMLDivElement | null>(null);
   // El fondo no recibe foco; al cerrar se restaura solo lo que este menú cambió.
@@ -50,6 +55,7 @@ export function AtelierSelect({
         {label}
       </label>
       <Select.Root
+        name={name}
         value={value}
         onValueChange={onChange}
         disabled={disabled}
@@ -57,19 +63,22 @@ export function AtelierSelect({
         onOpenChange={setOpen}
       >
         <Select.Trigger
+          ref={setTrigger}
+          name={name}
           className="atelier-select-trigger"
           aria-label={accessibleLabel}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
         >
-          <Select.Value>
+          <Select.Value placeholder={placeholder}>
             {options.find((option) => option.value === value)?.shortLabel}
           </Select.Value>
           <Select.Icon>
             <Icon name="chevron" />
           </Select.Icon>
         </Select.Trigger>
-        <Select.Portal>
+        {/* Dentro de un dialog nativo, el menú debe compartir su capa superior. */}
+        <Select.Portal container={trigger?.closest('dialog') ?? undefined}>
           <Select.Content
             ref={setMenu}
             className="atelier-select-menu"
