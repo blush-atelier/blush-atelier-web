@@ -29,32 +29,6 @@ export function CardFields({
   return (
     <fieldset className="card-fields" disabled={disabled}>
       <legend>Tu tarjeta</legend>
-      <div className="card-fields-heading">
-        <p>Visa o Mastercard</p>
-        <div
-          className="card-brands"
-          aria-label={
-            brand ? `Tarjeta ${brand} detectada` : 'Tarjetas aceptadas'
-          }
-        >
-          <span className={brand === 'VISA' ? 'is-detected' : ''}>
-            <img
-              src="/images/payments/visa.svg"
-              alt="Visa"
-              width="42"
-              height="24"
-            />
-          </span>
-          <span className={brand === 'MASTERCARD' ? 'is-detected' : ''}>
-            <img
-              src="/images/payments/mastercard.svg"
-              alt="Mastercard"
-              width="38"
-              height="24"
-            />
-          </span>
-        </div>
-      </div>
       <div className="checkout-fields">
         {(
           [
@@ -95,38 +69,65 @@ export function CardFields({
             <label className="field-label" htmlFor={`card-${field.name}`}>
               {field.label}
             </label>
-            <input
-              id={`card-${field.name}`}
-              name={`card-${field.name}`}
-              value={value[field.name]}
-              type={field.name === 'cvc' ? 'password' : 'text'}
-              inputMode={field.name === 'holder' ? 'text' : 'numeric'}
-              autoComplete={field.complete}
-              placeholder={field.placeholder}
-              maxLength={field.max}
-              required
-              aria-invalid={Boolean(errors[field.name])}
-              aria-describedby={
-                errors[field.name] ? `card-error-${field.name}` : undefined
+            <div
+              className={
+                field.name === 'number' ? 'card-number-control' : undefined
               }
-              onChange={(e) => {
-                let next = e.target.value;
-                if (field.name === 'number')
-                  next = next
-                    .replace(/\D/g, '')
-                    .slice(0, 19)
-                    .replace(/(.{4})/g, '$1 ')
-                    .trim();
-                if (field.name === 'expiry') {
-                  const digits = next.replace(/\D/g, '').slice(0, 4);
-                  next =
-                    digits.length > 2
-                      ? digits.slice(0, 2) + '/' + digits.slice(2)
-                      : digits;
+            >
+              <input
+                id={`card-${field.name}`}
+                name={`card-${field.name}`}
+                value={value[field.name]}
+                type={field.name === 'cvc' ? 'password' : 'text'}
+                inputMode={field.name === 'holder' ? 'text' : 'numeric'}
+                autoComplete={field.complete}
+                placeholder={field.placeholder}
+                maxLength={field.max}
+                required
+                aria-invalid={Boolean(errors[field.name])}
+                aria-describedby={
+                  errors[field.name] ? `card-error-${field.name}` : undefined
                 }
-                onChange({ ...value, [field.name]: next });
-              }}
-            />
+                onChange={(e) => {
+                  let next = e.target.value;
+                  if (field.name === 'number')
+                    next = next
+                      .replace(/\D/g, '')
+                      .slice(0, 19)
+                      .replace(/(.{4})/g, '$1 ')
+                      .trim();
+                  if (field.name === 'expiry') {
+                    const digits = next.replace(/\D/g, '').slice(0, 4);
+                    next =
+                      digits.length > 2
+                        ? digits.slice(0, 2) + '/' + digits.slice(2)
+                        : digits;
+                  }
+                  onChange({ ...value, [field.name]: next });
+                }}
+              />
+              {field.name === 'number' && (
+                <span
+                  className="card-number-brand"
+                  role="status"
+                  aria-label={
+                    brand
+                      ? `Tarjeta ${brand} detectada`
+                      : 'Marca de tarjeta sin identificar'
+                  }
+                >
+                  {brand && (
+                    <img
+                      key={brand}
+                      src={`/images/payments/${brand === 'VISA' ? 'visa' : 'mastercard'}.svg`}
+                      alt={brand === 'VISA' ? 'Visa' : 'Mastercard'}
+                      width="42"
+                      height="26"
+                    />
+                  )}
+                </span>
+              )}
+            </div>
             {errors[field.name] && (
               <p className="field-error" id={`card-error-${field.name}`}>
                 {errors[field.name]}

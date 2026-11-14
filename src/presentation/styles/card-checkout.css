@@ -14,50 +14,33 @@
   .card-fields .form-field:last-child {
     grid-column: 1/-1;
   }
-  .card-brands img {
-    object-fit: contain;
-  }
   .card-fields legend {
     font-family: var(--serif);
     font-size: 26px;
     color: var(--ink);
     padding: 0;
+    margin-bottom: 20px;
   }
-  .card-fields-heading {
+  .card-number-control {
+    position: relative;
+    min-width: 0;
+  }
+  .card-number-control input {
+    width: 100%;
+    padding-inline-end: 66px;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-number-brand {
+    position: absolute;
+    inset-inline-end: 14px;
+    top: 0;
+    height: 48px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 10px 0 20px;
+    pointer-events: none;
   }
-  .card-fields-heading p {
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .card-brands {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .card-brands span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 30px;
-    padding: 4px 8px;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
-    transition:
-      border-color 160ms ease,
-      color 160ms ease;
-  }
-  .card-brands .is-detected {
-    border-color: var(--cocoa);
-    color: var(--cocoa);
-    background: var(--rose-soft);
+  .card-number-brand img {
+    object-fit: contain;
   }
   .card-security-note {
     font-size: 12px;
@@ -164,6 +147,9 @@
 }
 @layer motion {
   @media (prefers-reduced-motion: no-preference) {
+    .card-number-brand img {
+      animation: payment-alert-in 160ms ease-out both;
+    }
     .payment-alert[open] {
       animation: payment-alert-in 180ms ease-out both;
     }
