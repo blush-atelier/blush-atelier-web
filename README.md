@@ -7,6 +7,7 @@ Repositorio independiente del backend NestJS. Pagos exclusivamente Wompi Sandbox
 | ---------------- | ----------------------------------------------------------------------- |
 | Tienda publicada | [Blush Atelier](https://dviblid28pd4o.cloudfront.net/)                  |
 | API pública      | [Catálogo JSON](https://dviblid28pd4o.cloudfront.net/api/products)      |
+| Origen API HTTPS | [API NestJS](https://blush-atelier-api.duckdns.org)                     |
 | Swagger          | [API interactiva](https://dviblid28pd4o.cloudfront.net/api/docs)        |
 | Frontend         | [blush-atelier-web](https://github.com/blush-atelier/blush-atelier-web) |
 | Backend          | [blush-atelier-api](https://github.com/blush-atelier/blush-atelier-api) |
@@ -60,7 +61,9 @@ flowchart LR
   APP --> PORT[Puertos y Result del dominio]
   HTTP[Adaptador HTTP] -. implementa .-> PORT
   STORAGE[Progreso seguro localStorage] -. implementa .-> PORT
-  HTTP --> API[NestJS / PostgreSQL]
+  HTTP --> EDGE[CloudFront: /api/*]
+  EDGE --> API[NestJS en Docker / EC2]
+  API --> DB[(PostgreSQL RDS)]
   CARD[Tokenización JWE] -. implementa .-> PORT
   CARD --> WOMPI[Wompi Sandbox]
 ```
@@ -101,7 +104,7 @@ Reporte local: `coverage/lcov-report/index.html` (no versionado).
 
 La usuaria confirmó el ciclo de compra y el responsive de la versión actual.
 Las capturas en `docs/visual-review/` corresponden a una revisión anterior: no prueban
-el modal actual. Pendiente dejar evidencia del checkout publicado en AWS y pruebas
+el modal actual. La usuaria confirmó dos compras Sandbox en AWS. Sigue pendiente evidencia de pruebas
 con Firefox/Safari; no se dan por verificadas pantallas que la herramienta no observó.
 
 ## AWS y CI
@@ -113,6 +116,18 @@ fuera de `dist/`; configura cabeceras de seguridad en CloudFront y caché de ass
 No publiques ni invalides caché sin aprobar el despliegue.
 
 GitHub Actions ejecuta `npm ci`, formato, lint, typecheck, Jest con cobertura y build.
-Promoción por PR: `feature/* → development → staging → production`. CD automático
-no habilitado. La configuración efectiva de protecciones se verifica en GitHub.
-[Requisitos](docs/requirements.md).
+Promoción por PR: `feature/* → development → staging → production`. No hay despliegue
+automático. CI/CD es un valor agregado, no un requisito de la rúbrica.
+
+### Limitaciones conocidas
+
+Las dos compras Sandbox en AWS fueron comprobadas por la usuaria. El webhook público
+rechaza firma inválida; eventos firmados, duplicados y rollback se validaron con
+proveedor simulado. No se comprobó un webhook emitido por Wompi: el dashboard
+compartido está bloqueado. El backend confirma el estado mediante consulta privada.
+Firefox/Safari no se probaron; no se declara compatibilidad verificada.
+
+CloudFront aún convierte globalmente errores 403/404 en `index.html` con HTTP 200,
+incluso para `/api/*`. La API directa conserva el 404 JSON. La corrección pendiente
+es reescribir únicamente rutas SPA en el comportamiento S3 y retirar el fallback
+global; no se aplicaron cambios AWS. [Requisitos](docs/requirements.md).
