@@ -37,7 +37,7 @@ Vite envía `/api` al backend local mediante proxy: no necesitas `.env` en el fr
 5. En **Mi pedido** puedes consultar una referencia de la sesión activa sin modificar el carrito. Refresca `/pedido`: se consulta el estado en API. Vuelve a la tienda para ver el stock actualizado.
 6. En DevTools prueba 320, 375, 768 y 1440 px; usa Tab y Escape en el modal. Desconecta la red y revisa el error/reintento.
 
-El seed añade 20 productos de marcas reales con fotos optimizadas y precios de referencia en COP consultados el 13/11/2026; conserva los 2 productos ficticios anteriores. Stock de demostración. [Fuentes del catálogo](docs/decisions-and-interview-notes.md#mejora-visual-y-catálogo-real--13112026).
+El seed añade 20 productos de marcas reales con fotos optimizadas y precios de referencia en COP consultados el 13/11/2026; conserva los 2 productos ficticios anteriores. Stock de demostración. Las fuentes de referencia están en el catálogo del backend.
 
 El catálogo tiene 22 productos, paginados de 8 en 8 (8/8/6). Página, búsqueda, categoría, marca y orden quedan en la URL; al cambiar filtros se vuelve a la primera página y el enlace Tienda del detalle conserva la selección. La paginación actual es local sobre el listado de API.
 
@@ -45,7 +45,7 @@ El carrito admite **varios productos con cantidades independientes**. Cada reser
 
 Montserrat y Bodoni Moda se sirven localmente (WOFF2, licencias OFL), sin consultas externas de fuentes. Los filtros usan Radix Select headless con estilos propios, teclado, portal y selección marcada. Las animaciones de carrito, cantidades y navegación móvil respetan reducir movimiento.
 
-La reserva dura 15 minutos y depende de una sesión HttpOnly de una hora. La API libera reservas vencidas al consultar/cotizar/reservar; la pantalla actualiza el pedido cada 20 segundos cuando está visible. Solo se persisten referencias, cantidad y clave de reintento; contacto/dirección se mantienen en memoria del formulario. Una reserva no es un pago aprobado.
+La reserva dura 15 minutos y depende de una sesión HttpOnly de una hora. La API libera reservas vencidas al consultar/cotizar/reservar; la aplicación verifica automáticamente cada 2,5 segundos mientras PENDING está visible y al reconectar/recuperar foco. Solo se persisten referencias, cantidad y clave de reintento; contacto/dirección se mantienen en memoria del formulario. Una reserva no es un pago aprobado.
 
 ## Arquitectura y datos
 
@@ -74,11 +74,11 @@ npm run test:cov
 npm run build
 ```
 
-Jest: **118 pruebas**, 12 suites. Cobertura local medida: **96,54% statements · 92,36% branches · 97,19% functions · 96,62% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
+Jest: **125 pruebas**, 13 suites. Cobertura local medida: **96,69% statements · 92,74% branches · 97,30% functions · 96,60% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
 
 CI ejecuta `npm ci` y todos los comandos anteriores en PR hacia development/staging/production y pushes a esas ramas o feature/*. La promoción es `feature/* → development → staging → production`; requiere configurar protecciones en GitHub. Workflow definido; ejecución remota pendiente. CD todavía no está habilitado.
 
-Revisión anterior (no acredita el nuevo formulario): en Chrome de Windows, los nueve tamaños solicitados, desde 320×568 hasta 1920×1080, con respuestas de API simuladas. [Evidencia y límites](docs/decisions-and-interview-notes.md#revisión-responsive-y-accesible-con-skills).
+Revisión anterior (no acredita el nuevo formulario): en Chrome de Windows, los nueve tamaños solicitados, desde 320×568 hasta 1920×1080, con respuestas de API simuladas. Las capturas siguientes pertenecen a esa versión anterior.
 
 [Antes](docs/visual-review/before-375.webp) · [Después](docs/visual-review/after-375.webp) · [Selector abierto](docs/visual-review/brand-selector-375.webp) · [Checkout móvil](docs/visual-review/checkout-320.webp).
 
@@ -95,7 +95,7 @@ fuera de Redux y localStorage y se descarta tras el envío. La tokenización no 
 fondos: el cargo se pide después de revisar el resumen, completar la tarjeta y crear PENDING.
 
 Con F5 no se recupera la tarjeta: si aún no se envió el pago, se solicita de nuevo.
-Si ya se envió, se consulta el mismo pedido sin reenviar el cargo. Timeout no significa
+Si ya se envió, se consulta automáticamente el mismo pedido, incluso desde otra ruta, sin reenviar el cargo. Timeout no significa
 rechazo. La API conserva la reserva hasta obtener un resultado verificado. Un intento
 sin ID recuperable necesita el webhook HTTPS público, pendiente de configurar en AWS.
 
@@ -113,4 +113,10 @@ No se hicieron pagos con dinero real, pushes, merges ni despliegues.
 Logos Visa/Mastercard: [Simple Icons](https://github.com/simple-icons/simple-icons),
 CC0; licencia junto a los SVG locales. Las marcas pertenecen a sus titulares.
 
-[Requisitos](docs/requirements.md) · [Checklist](docs/acceptance-checklist.md).
+[Requisitos](docs/requirements.md).
+
+Si la sesión vence, **Volver a comprar** limpia las referencias antiguas. Puedes agregar
+productos y, al completar nuevamente tus datos, se registra una sesión nueva. Esto no
+recupera permisos del pedido anterior ni cancela un pago que siga en proceso.
+El detalle ofrece productos disponibles de la misma categoría primero y un botón
+visible de **Volver a la tienda**. No requiere dependencias nuevas.
