@@ -312,3 +312,105 @@ export const beginCartCheckout =
     dispatch(actions.cartDetailsRequested());
     return true;
   };
+
+export const refreshPayment =
+  (providerPaymentId?: string): AppThunk =>
+  async (dispatch, getState, { api }) => {
+    const current = getState().checkout;
+    if (current.phase !== 'idle' || !current.transactionId) return false;
+    dispatch(actions.operationStarted('resuming'));
+    const verified = await api.verifyPayment(
+      current.transactionId,
+      providerPaymentId ?? current.providerPaymentId ?? undefined,
+    );
+    if (!verified.ok) {
+      dispatch(actions.checkoutFailed({ error: verified.error }));
+      return false;
+    }
+    const result = await api.getTransaction(current.transactionId);
+    if (!result.ok) {
+      dispatch(actions.checkoutFailed({ error: result.error }));
+      return false;
+    }
+    dispatch(actions.transactionReady(result.value));
+    void dispatch(loadProducts());
+    return true;
+  };
+
+export const startPayment =
+  (): AppThunk =>
+  async (dispatch, getState, { api, payment }) => {
+    const current = getState().checkout;
+    if (
+      current.phase !== 'idle' ||
+      !current.transactionId ||
+      current.transaction?.status !== 'PENDING'
+    )
+      return false;
+    if (current.providerPaymentId) return dispatch(refreshPayment());
+    if (!payment) {
+      dispatch(
+        actions.checkoutFailed({
+          error: { code: 'PaymentNotConfigured', status: 503 },
+        }),
+      );
+      return false;
+    }
+    dispatch(actions.operationStarted('paying'));
+    try {
+      const session = await api.preparePayment(current.transactionId);
+      if (!session.ok) {
+        dispatch(actions.checkoutFailed({ error: session.error }));
+        return false;
+      }
+      if (
+        session.value.reference !== current.transaction.reference ||
+        session.value.amountMinor !== current.transaction.totalMinor
+      ) {
+        dispatch(
+          actions.checkoutFailed({
+            error: { code: 'InvalidResponse', status: 502 },
+          }),
+        );
+        return false;
+      }
+      // La sesión firmada vive en esta llamada, no en Redux ni en la persistencia.
+      const opened = await payment.open(session.value);
+      if (!opened.ok) {
+        dispatch(
+          actions.checkoutFailed({ error: { code: opened.error, status: 0 } }),
+        );
+        return false;
+      }
+      if (opened.value.providerPaymentId)
+        dispatch(actions.paymentIdentified(opened.value.providerPaymentId));
+      const verified = await api.verifyPayment(
+        current.transactionId,
+        opened.value.providerPaymentId ??
+          current.providerPaymentId ??
+          undefined,
+      );
+      if (!verified.ok) {
+        dispatch(actions.checkoutFailed({ error: verified.error }));
+        return false;
+      }
+      const result = await api.getTransaction(current.transactionId);
+      if (!result.ok) {
+        dispatch(actions.checkoutFailed({ error: result.error }));
+        return false;
+      }
+      dispatch(actions.transactionReady(result.value));
+      void dispatch(loadProducts());
+      return true;
+    } catch {
+      dispatch(
+        actions.checkoutFailed({ error: { code: 'NetworkError', status: 0 } }),
+      );
+      return false;
+    }
+  };
+export const checkoutAndPay = (): AppThunk => async (dispatch) => {
+  if (!(await dispatch(reserveCheckout()))) return false;
+  void dispatch(startPayment());
+  return true;
+};

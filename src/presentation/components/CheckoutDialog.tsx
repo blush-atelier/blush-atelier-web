@@ -5,7 +5,7 @@ import { validateForm } from '../../domain/presentation';
 import { actions } from '../../application/state';
 import {
   prepareCheckout,
-  reserveCheckout,
+  checkoutAndPay,
   refreshQuote,
 } from '../../application/operations';
 import { useAppDispatch, useAppSelector } from '../hooks';
@@ -127,7 +127,7 @@ export function CheckoutDialog() {
     await dispatch(prepareCheckout(form));
   }
   async function reserve() {
-    if (await dispatch(reserveCheckout())) navigate('/pedido');
+    if (await dispatch(checkoutAndPay())) navigate('/pedido');
   }
   if (!open) return null;
   return (
@@ -306,11 +306,11 @@ export function CheckoutDialog() {
             </fieldset>
             <div className="payment-note">
               <span className="payment-note-label">
-                Pago con tarjeta <small>Próximamente</small>
+                Pago con tarjeta <small>Wompi Sandbox</small>
               </span>
               <p>
-                Hoy solo prepararás una reserva. No hay cobros y no te pediremos
-                información de tu tarjeta.
+                El siguiente paso abrirá el formulario seguro de Wompi Sandbox.
+                Usa únicamente tarjetas de prueba.
               </p>
             </div>
             <div className="dialog-actions">
@@ -362,9 +362,10 @@ export function CheckoutDialog() {
               <div className="payment-note">
                 <strong>Tu pedido, antes del pago.</strong>
                 <p>
-                  Al continuar se creará tu pedido pendiente y se reservarán los
-                  productos por 15 minutos. Wompi Sandbox aún no está conectado:
-                  no se solicitará tu tarjeta ni se realizará ningún cobro.
+                  Al continuar se registrará tu pedido pendiente y se abrirá
+                  Wompi Sandbox para pagar con una tarjeta de prueba. Tus datos
+                  de tarjeta se recogen directamente en el formulario del
+                  proveedor.
                 </p>
               </div>
               {checkout.error?.code === 'QuoteChanged' && (

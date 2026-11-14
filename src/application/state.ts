@@ -7,6 +7,7 @@ import type {
   Transaction,
 } from '../domain/contracts';
 export interface CheckoutState {
+  providerPaymentId: string | null;
   productId: string | null;
   items: { productId: string; quantity: number }[];
   quantity: number;
@@ -16,7 +17,7 @@ export interface CheckoutState {
   expectedTotalMinor: string | null;
   attempted: boolean;
   step: 'closed' | 'details' | 'review' | 'result';
-  phase: 'idle' | 'preparing' | 'reserving' | 'resuming';
+  phase: 'idle' | 'preparing' | 'reserving' | 'resuming' | 'paying';
   quote: Quote | null;
   transaction: Transaction | null;
   error: ApiError | null;
@@ -34,6 +35,7 @@ export interface AppState {
 }
 export function emptyCheckout(): CheckoutState {
   return {
+    providerPaymentId: null,
     productId: null,
     items: [],
     quantity: 1,
@@ -179,6 +181,10 @@ const slice = createSlice({
       state.checkout.attempted = true;
       state.checkout.error = null;
     },
+    paymentIdentified(state, action: PayloadAction<string>) {
+      if (state.checkout.transactionId)
+        state.checkout.providerPaymentId = action.payload;
+    },
     transactionReady(state, action: PayloadAction<Transaction>) {
       Object.assign(state.checkout, {
         transaction: action.payload,
@@ -219,6 +225,9 @@ export function safeProgress(state: AppState): SafeProgress | null {
   if (!value.productId) return null;
   return {
     version: 1,
+    ...(value.providerPaymentId
+      ? { providerPaymentId: value.providerPaymentId }
+      : {}),
     ...(value.items.length > 1
       ? {
           items: value.items.map(({ productId, quantity }) => ({

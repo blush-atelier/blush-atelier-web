@@ -17,7 +17,20 @@ export type ErrorCode =
   | 'InvalidDelivery'
   | 'InvalidCheckout'
   | 'InvalidInput'
-  | 'RateLimited';
+  | 'RateLimited'
+  | 'PaymentNotConfigured'
+  | 'PaymentSessionExpired'
+  | 'PaymentProviderUnavailable'
+  | 'PaymentNotFound'
+  | 'InvalidProviderResponse'
+  | 'InvalidPaymentObservation'
+  | 'PaymentIdentityMismatch'
+  | 'PaymentAmountMismatch'
+  | 'PaymentCurrencyMismatch'
+  | 'InvalidPaymentState'
+  | 'InvalidPaymentInput'
+  | 'PaymentWidgetUnavailable'
+  | 'PaymentWidgetBusy';
 export interface ApiError {
   code: ErrorCode;
   status: number;
@@ -84,7 +97,30 @@ export interface QuoteInput {
 export interface PendingInput extends QuoteInput {
   expectedTotalMinor: string;
 }
+export interface PaymentSession {
+  reference: string;
+  amountMinor: string;
+  currency: 'COP';
+  publicKey: string;
+  integrity: string;
+  expiresAt: string;
+}
+export interface PaymentWidgetPort {
+  open(
+    session: PaymentSession,
+  ): Promise<
+    Result<
+      { providerPaymentId: string | null },
+      'PaymentWidgetUnavailable' | 'PaymentWidgetBusy'
+    >
+  >;
+}
 export interface CheckoutApi {
+  preparePayment(id: string): Promise<ApiResult<PaymentSession>>;
+  verifyPayment(
+    id: string,
+    providerPaymentId?: string,
+  ): Promise<ApiResult<{ verified: boolean }>>;
   listProducts(): Promise<ApiResult<Product[]>>;
   getProduct(id: string): Promise<ApiResult<Product>>;
   registerCustomer(input: CustomerInput): Promise<ApiResult<{ id: string }>>;
@@ -97,6 +133,7 @@ export interface CheckoutApi {
   getTransaction(id: string): Promise<ApiResult<Transaction>>;
 }
 export interface SafeProgress {
+  providerPaymentId?: string;
   version: 1;
   items?: CartItem[];
   productId: string;

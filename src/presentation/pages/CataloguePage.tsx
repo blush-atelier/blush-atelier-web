@@ -372,8 +372,8 @@ export function CataloguePage() {
           <details>
             <summary>¿Se hará algún cobro?</summary>
             <p>
-              No. En esta versión puedes preparar tu entrega y reservar un
-              producto. El pago con tarjeta todavía no está habilitado.
+              Solo se realizan pagos de prueba mediante Wompi Sandbox. No uses
+              tarjetas reales; consulta el estado del pedido después de pagar.
             </p>
           </details>
           <details>

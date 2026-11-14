@@ -5,6 +5,7 @@ import {
 } from '@reduxjs/toolkit';
 import type {
   CheckoutApi,
+  PaymentWidgetPort,
   ProgressPort,
   RuntimePort,
 } from '../domain/contracts';
@@ -16,6 +17,7 @@ import {
   type AppState,
 } from './state';
 export interface Dependencies {
+  payment?: PaymentWidgetPort;
   api: CheckoutApi;
   progress: ProgressPort;
   runtime: RuntimePort;

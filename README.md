@@ -2,7 +2,7 @@
 
 Frontend React de Blush Atelier. Repositorio independiente de [blush-atelier-api](https://github.com/blush-atelier/blush-atelier-api).
 
-Funciona localmente: catálogo, búsqueda/filtros, detalle, carrito, formulario de entrega, resumen calculado por API, reserva `PENDING` y recuperación tras refrescar. **El pago con tarjeta todavía no está habilitado.** No se recogen tarjetas ni se hacen cobros.
+Funciona localmente: catálogo, búsqueda/filtros, detalle, carrito, formulario de entrega, resumen calculado por API, reserva `PENDING` y recuperación tras refrescar. El pago de prueba abre el Widget alojado de Wompi Sandbox. Requiere configurar las llaves únicamente en el backend; la validación con credenciales reales de Sandbox está pendiente.
 
 ## Iniciar en WSL
 
@@ -33,7 +33,7 @@ Vite envía `/api` al backend local mediante proxy: no necesitas `.env` en el fr
 1. Explora Bases, Correctores, Sombras o Accesorios; busca y filtra por categoría o marca (MAC, Too Faced, Bloomshell, Atenea); entra al detalle y cambia la cantidad.
 2. Pulsa **Agregar al carrito**. Agrega distintos productos desde la colección. Se abre una vista lateral sin salir del producto; puedes seguir comprando o pulsar Revisar carrito para cambiar unidades y eliminar líneas antes de continuar.
 3. Pulsa **Continuar con la entrega**. El formulario vacío debe marcar errores; completa datos ficticios válidos. Elige Departamento y después Ciudad / municipio; cambiar departamento limpia la ciudad.
-4. Revisa producto + tarifa base + envío en el resumen de dos capas (Backdrop). **Ver mis productos** despliega la selección (Ver mi producto si elegiste uno). Pulsa **Continuar con el pago**: por ahora crea el pedido/reserva `PENDING`, sin cobros; Wompi sigue pendiente.
+4. Revisa producto + tarifa base + envío en el resumen de dos capas (Backdrop). **Ver mis productos** despliega la selección (Ver mi producto si elegiste uno). Pulsa **Continuar con el pago**: crea primero `PENDING` y abre el Widget Wompi Sandbox. Elige tarjeta y utiliza solo datos oficiales de prueba. Al cerrarlo se consulta el resultado desde backend.
 5. Refresca `/pedido`: se consulta el estado en API. Vuelve a la colección para ver el stock actualizado.
 6. En DevTools prueba 320, 375, 768 y 1440 px; usa Tab y Escape en el modal. Desconecta la red y revisa el error/reintento.
 
@@ -72,7 +72,7 @@ npm run test:cov
 npm run build
 ```
 
-Jest: **101 pruebas**, 9 suites. Cobertura local medida: **98,04% statements · 95,73% branches · 98,25% functions · 97,94% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
+Jest: **126 pruebas**, 11 suites. Cobertura local medida: **96,69% statements · 94,06% branches · 98,07% functions · 96,91% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
 
 CI ejecuta `npm ci` y todos los comandos anteriores en PR hacia development/staging/production y pushes a esas ramas o feature/*. La promoción es `feature/* → development → staging → production`; requiere configurar protecciones en GitHub. Workflow definido; ejecución remota pendiente. CD todavía no está habilitado.
 
@@ -80,9 +80,23 @@ Verificación visual en Chrome de Windows: los nueve tamaños solicitados, desde
 
 [Antes](docs/visual-review/before-375.webp) · [Después](docs/visual-review/after-375.webp) · [Selector abierto](docs/visual-review/brand-selector-375.webp) · [Checkout móvil](docs/visual-review/checkout-320.webp).
 
-## Entrega pendiente
+## Pago Sandbox y entrega pendiente
 
-Wompi Sandbox: captura alojada/tokenizada, inicio de pago, verificación en backend, webhook e idempotencia del pago; luego E2E Sandbox. AWS: S3/CloudFront, HTTPS, fallback SPA y API conectada; configurar origen permitido/cookies y OIDC tras validar infraestructura. URLs públicas frontend/API/Swagger: **pendientes de verificar**. No se han desplegado recursos desde este cambio.
+Configura Wompi en el `.env` del backend según su README y reinicia la API. No añadas
+llaves Wompi al frontend. El Widget se carga desde su URL oficial cuando vas a pagar;
+PAN/CVV se recogen allí. Redux/localStorage solo conservan progreso e ID de proveedor,
+nunca sesión firmada, secretos ni tarjeta. No se instalaron dependencias nuevas.
+
+Prueba aprobación/rechazo y cierre; al volver, Actualizar estado consulta nuestra API.
+Si el resultado es incierto, conserva el mismo pedido. El ID del proveedor permite
+reanudar la verificación después de F5 sin abrir otro pago. Para refrescar mientras
+el Widget está abierto, configura un webhook HTTPS público accesible por Wompi;
+localhost no sirve como destino del webhook. Un intento iniciado sin resultado
+verificable mantiene la reserva hasta reconciliarse, no se libera por tiempo.
+
+El flujo está probado con proveedor simulado; pendiente probarlo con tus credenciales
+Sandbox, recibir eventos reales y verificar el despliegue AWS/HTTPS/CORS/cookies.
+No se hicieron transacciones reales ni despliegues desde estos cambios.
 
 [Requisitos](docs/requirements.md) · [Checklist](docs/acceptance-checklist.md) · [Decisiones y punto de retoma](docs/decisions-and-interview-notes.md)
 

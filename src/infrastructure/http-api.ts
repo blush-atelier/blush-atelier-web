@@ -5,6 +5,7 @@ import type {
   Product,
   Quote,
   Transaction,
+  PaymentSession,
 } from '../domain/contracts';
 type RecordValue = Record<string, unknown>;
 const record = (value: unknown): value is RecordValue =>
@@ -92,6 +93,19 @@ export function isTransaction(value: unknown): value is Transaction {
   );
 }
 const codes = new Set([
+  'PaymentNotConfigured',
+  'PaymentSessionExpired',
+  'PaymentProviderUnavailable',
+  'PaymentNotFound',
+  'InvalidProviderResponse',
+  'InvalidPaymentObservation',
+  'PaymentIdentityMismatch',
+  'PaymentAmountMismatch',
+  'PaymentCurrencyMismatch',
+  'InvalidPaymentState',
+  'InvalidPaymentInput',
+  'PaymentWidgetUnavailable',
+  'PaymentWidgetBusy',
   'SessionRequired',
   'DeliveryNotFound',
   'ProductNotFound',
@@ -221,7 +235,49 @@ export function createHttpApi(
     reservationStatus: value.reservationStatus,
     reservationExpiresAt: value.reservationExpiresAt,
   });
+  const paymentSession = (value: unknown): PaymentSession | null => {
+    if (
+      !record(value) ||
+      typeof value.reference !== 'string' ||
+      !value.reference.length ||
+      value.reference.length > 80 ||
+      !money(value.amountMinor) ||
+      BigInt(value.amountMinor) <= 0n ||
+      BigInt(value.amountMinor) > BigInt(Number.MAX_SAFE_INTEGER) ||
+      value.currency !== 'COP' ||
+      typeof value.publicKey !== 'string' ||
+      !/^pub_test_[A-Za-z0-9_]+$/.test(value.publicKey) ||
+      typeof value.integrity !== 'string' ||
+      !/^[a-f0-9]{64}$/i.test(value.integrity) ||
+      typeof value.expiresAt !== 'string' ||
+      !Number.isFinite(Date.parse(value.expiresAt))
+    )
+      return null;
+    return {
+      reference: value.reference,
+      amountMinor: value.amountMinor,
+      currency: 'COP',
+      publicKey: value.publicKey,
+      integrity: value.integrity,
+      expiresAt: value.expiresAt,
+    };
+  };
   return {
+    preparePayment: (transactionId) =>
+      send(
+        `/transactions/${encodeURIComponent(transactionId)}/payment-session`,
+        paymentSession,
+        { method: 'CARD' },
+      ),
+    verifyPayment: (transactionId, providerPaymentId) =>
+      send(
+        `/transactions/${encodeURIComponent(transactionId)}/payment-verification`,
+        (value) =>
+          record(value) && typeof value.verified === 'boolean'
+            ? { verified: value.verified }
+            : null,
+        providerPaymentId ? { providerPaymentId } : {},
+      ),
     listProducts: () =>
       send('/products', (value) =>
         Array.isArray(value) && value.every(isProduct)

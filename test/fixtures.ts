@@ -70,6 +70,11 @@ export const progress: SafeProgress = {
 export const success = <T>(value: T): ApiResult<T> => ({ ok: true, value });
 export function apiFixture(): jest.Mocked<CheckoutApi> {
   return {
+    preparePayment: jest.fn().mockResolvedValue({
+      ok: false,
+      error: { code: 'PaymentNotConfigured', status: 503 },
+    }),
+    verifyPayment: jest.fn().mockResolvedValue(success({ verified: false })),
     listProducts: jest.fn().mockResolvedValue(success([product, lipstick])),
     getProduct: jest.fn().mockResolvedValue(success(product)),
     registerCustomer: jest.fn().mockResolvedValue(success({ id: otherId })),

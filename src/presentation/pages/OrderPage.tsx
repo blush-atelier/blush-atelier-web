@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { TransactionStatus } from '../../domain/contracts';
-import { resumeCheckout } from '../../application/operations';
+import {
+  resumeCheckout,
+  refreshPayment,
+  startPayment,
+} from '../../application/operations';
 import { actions } from '../../application/state';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { OrderSummary } from '../components/OrderSummary';
@@ -16,7 +20,7 @@ const statuses: Record<
     label: 'RESERVA ACTIVA · PAGO PENDIENTE',
     title: 'Tu selección te espera.',
     description:
-      'Guardamos tu próximo esencial por un momento. Esta reserva no es un pago y no se ha realizado ningún cobro.',
+      'Guardamos tu próximo esencial por un momento. El pago todavía no está confirmado. Consulta su estado antes de abrir otro intento.',
   },
   EXPIRED: {
     label: 'RESERVA FINALIZADA',
@@ -53,7 +57,7 @@ export function OrderPage() {
     checkout.error?.code === 'SessionRequired' ? null : checkout.transaction;
   useEffect(() => {
     if (!checkout.transactionId && !checkout.attempted) return;
-    void dispatch(resumeCheckout());
+    void dispatch(checkout.transactionId ? refreshPayment() : resumeCheckout());
     if (
       checkout.transaction?.status &&
       checkout.transaction.status !== 'PENDING'
@@ -61,7 +65,7 @@ export function OrderPage() {
       return;
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible')
-        void dispatch(resumeCheckout());
+        void dispatch(refreshPayment());
     }, 20000);
     return () => clearInterval(timer);
   }, [
@@ -234,7 +238,7 @@ export function OrderPage() {
                 </h2>
                 <p>
                   {transaction.status === 'PENDING'
-                    ? 'El pago con tarjeta todavía no está habilitado en esta versión.'
+                    ? 'Paga con una tarjeta de prueba en Wompi Sandbox. Si ya lo intentaste, consulta el estado; el cierre del formulario no prueba un rechazo.'
                     : 'Consulta aquí las actualizaciones de tu pedido.'}
                 </p>
               </div>
@@ -242,16 +246,37 @@ export function OrderPage() {
             <li>
               <span className="timeline-dot">04</span>
               <div>
-                <h2>Entrega por confirmar</h2>
-                <p>La reserva no implica que el pedido se haya despachado.</p>
+                <h2>
+                  {transaction.status === 'APPROVED'
+                    ? 'Entrega preparada'
+                    : 'Entrega por confirmar'}
+                </h2>
+                <p>
+                  {transaction.status === 'APPROVED'
+                    ? 'Tu pedido está asignado a la entrega registrada. Esta demostración no realiza despachos.'
+                    : 'La reserva no implica que el pedido se haya despachado.'}
+                </p>
               </div>
             </li>
           </ol>
           <div className="order-buttons">
+            {transaction.status === 'PENDING' && (
+              <button
+                className="button button--dark"
+                disabled={checkout.phase !== 'idle'}
+                onClick={() => void dispatch(startPayment())}
+              >
+                {checkout.phase === 'paying'
+                  ? 'Comprobando pago…'
+                  : checkout.providerPaymentId
+                    ? 'Verificar pago'
+                    : 'Pagar con tarjeta · Sandbox'}
+              </button>
+            )}
             <button
               className="button button--outline"
               disabled={checkout.phase !== 'idle'}
-              onClick={() => void dispatch(resumeCheckout())}
+              onClick={() => void dispatch(refreshPayment())}
             >
               <Icon name="refresh" />
               {checkout.phase !== 'idle'
@@ -281,8 +306,8 @@ export function OrderPage() {
           })}
           <OrderSummary quote={transaction} />
           <p className="safe-note">
-            Importes del pedido registrado. En esta etapa no se solicitan datos
-            de tarjeta.
+            Importes del pedido registrado. La tarjeta se recoge en Wompi
+            Sandbox, nunca en nuestro formulario ni almacenamiento.
           </p>
         </aside>
       </div>

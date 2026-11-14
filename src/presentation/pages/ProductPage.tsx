@@ -167,8 +167,9 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
             <details>
               <summary>Sobre el pago con tarjeta</summary>
               <p>
-                El pago aún no está habilitado. Esta versión no recoge
-                información de tarjetas ni realiza cobros.
+                El pago de prueba se completa en el formulario alojado de Wompi
+                Sandbox. No guardamos el número de tarjeta ni el código de
+                seguridad.
               </p>
             </details>
           </div>

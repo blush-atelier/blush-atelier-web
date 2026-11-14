@@ -11,6 +11,7 @@ export function parseProgress(value: unknown): SafeProgress | null {
   const data = value as Record<string, unknown>;
   const keys = [
     'version',
+    'providerPaymentId',
     'items',
     'productId',
     'quantity',
@@ -51,6 +52,15 @@ export function parseProgress(value: unknown): SafeProgress | null {
       data.items[0].quantity !== data.quantity)
   )
     return null;
+  if (
+    data.providerPaymentId !== undefined &&
+    (typeof data.providerPaymentId !== 'string' ||
+      !/^(?=.{1,128}$)[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)+$/.test(
+        data.providerPaymentId,
+      ) ||
+      !uuid(data.transactionId))
+  )
+    return null;
   if (data.deliveryId !== null && !uuid(data.deliveryId)) return null;
   if (data.transactionId !== null && !uuid(data.transactionId)) return null;
   if (
@@ -72,6 +82,9 @@ export function parseProgress(value: unknown): SafeProgress | null {
     return null;
   return {
     version: 1,
+    ...(typeof data.providerPaymentId === 'string'
+      ? { providerPaymentId: data.providerPaymentId }
+      : {}),
     ...(Array.isArray(data.items)
       ? {
           items: data.items.map((i) => ({

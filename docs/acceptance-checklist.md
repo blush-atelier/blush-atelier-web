@@ -1,6 +1,6 @@
 # Acceptance checklist — tick off with evidence
 
-Auditoría consolidada del 13/11/2026: [matriz y plan mínimo en el repositorio backend](../../blush-atelier-api/docs/delivery-audit.md). Los apartados de evidencia de abajo registran hitos históricos; no prueban pagos Wompi ni AWS. Medición actual: API 111 + 23 integración, WEB 101 pruebas; ambos >80% en las cuatro métricas.
+Auditoría consolidada del 13/11/2026: [matriz y plan mínimo en el repositorio backend](../../blush-atelier-api/docs/delivery-audit.md). Los apartados de evidencia de abajo registran hitos históricos; no prueban pagos Wompi ni AWS. Medición actual: API 111 + 23 integración, WEB 126 pruebas; ambos >80% en las cuatro métricas.
 
 Frontend local: catálogo → entrega → resumen → reserva PENDING. Evidencia y límites en [README](../README.md) y [notas](decisions-and-interview-notes.md). Los pagos y AWS siguen pendientes. Las pruebas de estados finales usan respuestas simuladas de API; no prueban Wompi.
 
@@ -233,3 +233,14 @@ La comprobación visual usó respuestas de API simuladas; no es evidencia de pag
 
 La brecha de los 100 puntos base y 50 bonus se detalla en la auditoría backend;
 no se declaran puntos concedidos ni AWS/Wompi funcionando sin verificarlos.
+
+## Pago conectado para validación manual
+
+- [x] Backdrop → PENDING → Widget alojado → verificación backend; puertos y Redux conservados.
+- [x] Sesión firmada fuera de Redux/storage; solo ID seguro para recuperar verificación.
+- [x] 126 pruebas Jest; cobertura >80% en las cuatro métricas; build/lint/typecheck correctos.
+- [ ] Probar tarjeta/aprobado/rechazo/error reales en Sandbox con credenciales del comercio.
+- [ ] Probar F5 durante Widget con webhook HTTPS público y comprobar ausencia de doble cobro.
+- [ ] Verificar AWS y compatibilidad entre navegadores con el proveedor real.
+
+Las respuestas de proveedor en pruebas automatizadas son simuladas. Configuración y pasos manuales en README.
