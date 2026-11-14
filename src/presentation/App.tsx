@@ -4,6 +4,7 @@ import { resumeCheckout } from '../application/operations';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { Shell } from './components/Shell';
 import { CartDrawer } from './components/CartDrawer';
+import { PaymentAlerts } from './components/PaymentAlerts';
 import { CheckoutDialog } from './components/CheckoutDialog';
 import { CataloguePage } from './pages/CataloguePage';
 import { ProductPage } from './pages/ProductPage';
@@ -47,6 +48,7 @@ export function App() {
         />
       </Routes>
       <CheckoutDialog />
+      <PaymentAlerts />
       {cartPreview && <CartDrawer onClose={() => setCartPreview(false)} />}
     </Shell>
   );

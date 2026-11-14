@@ -84,7 +84,7 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
           <p className="art-caption">
             {brandOf(product) === 'Atelier'
               ? 'BLUSH ATELIER · Imagen ilustrativa'
-              : 'Fotografía del producto · Catálogo de demostración'}
+              : 'Fotografía del producto'}
           </p>
         </div>
         <div className="detail-copy">
@@ -167,9 +167,8 @@ export function ProductPage({ onAdded }: { onAdded: () => void }) {
             <details>
               <summary>Sobre el pago con tarjeta</summary>
               <p>
-                El pago de prueba se completa en el formulario alojado de Wompi
-                Sandbox. No guardamos el número de tarjeta ni el código de
-                seguridad.
+                Tu tarjeta se cifra y tokeniza directamente con Wompi. No
+                guardamos el número de tarjeta ni el código de seguridad.
               </p>
             </details>
           </div>

@@ -1,6 +1,12 @@
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  act,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SummaryBackdrop } from '../src/presentation/components/SummaryBackdrop';
 import { App } from '../src/presentation/App';
@@ -161,7 +167,7 @@ test('carrito vacío, revisión de contenido y entrega posterior, con persistenc
     screen.getByRole('button', { name: 'Reducir unidades del carrito' }),
   );
   await user.click(
-    screen.getByRole('button', { name: 'Continuar con la entrega' }),
+    screen.getByRole('button', { name: 'Pagar con tarjeta de crédito' }),
   );
   expect(screen.getByLabelText('Nombre y apellido')).toBeVisible();
   fireEvent(
@@ -213,7 +219,7 @@ test('si cambió el stock se muestra el aviso y bloquea continuar; permite corre
   const { user } = setup('/carrito', f);
   await waitFor(() =>
     expect(
-      screen.getByRole('button', { name: 'Continuar con la entrega' }),
+      screen.getByRole('button', { name: 'Pagar con tarjeta de crédito' }),
     ).toBeDisabled(),
   );
   expect(f.store.dispatch(beginCartCheckout())).toBe(false);
@@ -224,7 +230,7 @@ test('si cambió el stock se muestra el aviso y bloquea continuar; permite corre
     screen.getByRole('button', { name: 'Reducir unidades del carrito' }),
   );
   expect(
-    screen.getByRole('button', { name: 'Continuar con la entrega' }),
+    screen.getByRole('button', { name: 'Pagar con tarjeta de crédito' }),
   ).toBeEnabled();
 });
 test('la solicitud pendiente queda protegida incluso al abrir el carrito directamente', async () => {
@@ -279,7 +285,7 @@ test('el carrito se rehidrata solo con referencias y volver desde entrega no res
   );
   expect(screen.queryByLabelText('Correo electrónico')).not.toBeInTheDocument();
   await user.click(
-    screen.getByRole('button', { name: 'Continuar con la entrega' }),
+    screen.getByRole('button', { name: 'Pagar con tarjeta de crédito' }),
   );
   await user.click(screen.getByRole('button', { name: 'Revisar carrito' }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -332,7 +338,9 @@ test('cotiza todos los productos, muestra el desglose y reintenta la misma reser
     ok: false,
     error: { code: 'NetworkError', status: 0 },
   });
-  await f.store.dispatch(reserveCheckout());
+  await act(async () => {
+    await f.store.dispatch(reserveCheckout());
+  });
   const original = f.api.createPending.mock.calls[0];
   expect(f.store.dispatch(removeFromCart(otherId))).toBe(false);
   expect(f.store.dispatch(addToCart(otherId, 1))).toEqual({

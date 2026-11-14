@@ -1,4 +1,4 @@
-import { createWompiWidget } from './infrastructure/wompi-widget';
+import { createCardPayments } from './infrastructure/card-tokenization';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
@@ -7,9 +7,10 @@ import { createAppStore } from './application/store';
 import { createHttpApi } from './infrastructure/http-api';
 import { browserProgress, newRequestKey } from './infrastructure/progress';
 import { App } from './presentation/App';
+const api = createHttpApi(__API_BASE_URL__);
 const store = createAppStore({
-  payment: createWompiWidget(__WOMPI_WIDGET_URL__),
-  api: createHttpApi(__API_BASE_URL__),
+  card: createCardPayments(api),
+  api,
   progress: browserProgress(),
   runtime: { newKey: newRequestKey },
 });

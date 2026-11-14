@@ -5,6 +5,7 @@ import {
   resumeCheckout,
   refreshPayment,
   startPayment,
+  cardEnabled,
 } from '../../application/operations';
 import { actions } from '../../application/state';
 import { useAppDispatch, useAppSelector } from '../hooks';
@@ -52,6 +53,10 @@ export function OrderPage() {
   const navigate = useNavigate();
   const checkout = useAppSelector((state) => state.checkout);
   const products = useAppSelector((state) => state.products);
+  const [cardMode, setCardMode] = useState(false);
+  useEffect(() => {
+    setCardMode(dispatch(cardEnabled()));
+  }, [dispatch]);
   const [copied, setCopied] = useState('');
   const transaction =
     checkout.error?.code === 'SessionRequired' ? null : checkout.transaction;
@@ -97,7 +102,7 @@ export function OrderPage() {
           </p>
         </div>
         <ErrorNotice
-          error={checkout.error}
+          error={cardMode ? null : checkout.error}
           retry={() => void dispatch(resumeCheckout())}
         />
         {checkout.phase !== 'idle' ? (
@@ -156,11 +161,15 @@ export function OrderPage() {
     <section className="section-wrap order-page">
       <div className="order-intro">
         <p className="eyebrow">{content.label}</p>
-        <h1 tabIndex={-1}>{content.title}</h1>
+        <h1 tabIndex={-1}>
+          {checkout.paymentSubmitted && transaction.status === 'PENDING'
+            ? 'Completando pago'
+            : content.title}
+        </h1>
         <p>{content.description}</p>
       </div>
       <ErrorNotice
-        error={checkout.error}
+        error={cardMode ? null : checkout.error}
         retry={() => void dispatch(resumeCheckout())}
       />
       <div className="order-layout">
@@ -238,7 +247,7 @@ export function OrderPage() {
                 </h2>
                 <p>
                   {transaction.status === 'PENDING'
-                    ? 'Paga con una tarjeta de prueba en Wompi Sandbox. Si ya lo intentaste, consulta el estado; el cierre del formulario no prueba un rechazo.'
+                    ? 'Consulta el estado de tu pago. Confirmamos el resultado directamente con Wompi para evitar intentos duplicados.'
                     : 'Consulta aquí las actualizaciones de tu pedido.'}
                 </p>
               </div>
@@ -253,7 +262,7 @@ export function OrderPage() {
                 </h2>
                 <p>
                   {transaction.status === 'APPROVED'
-                    ? 'Tu pedido está asignado a la entrega registrada. Esta demostración no realiza despachos.'
+                    ? 'Tu pedido está asignado a la dirección de entrega registrada.'
                     : 'La reserva no implica que el pedido se haya despachado.'}
                 </p>
               </div>
@@ -270,7 +279,9 @@ export function OrderPage() {
                   ? 'Comprobando pago…'
                   : checkout.providerPaymentId
                     ? 'Verificar pago'
-                    : 'Pagar con tarjeta · Sandbox'}
+                    : checkout.paymentSubmitted
+                      ? 'Consultar pago'
+                      : 'Pagar con tarjeta de crédito'}
               </button>
             )}
             <button
@@ -306,8 +317,8 @@ export function OrderPage() {
           })}
           <OrderSummary quote={transaction} />
           <p className="safe-note">
-            Importes del pedido registrado. La tarjeta se recoge en Wompi
-            Sandbox, nunca en nuestro formulario ni almacenamiento.
+            Importes del pedido registrado. La tarjeta se tokeniza directamente
+            con Wompi. No almacenamos su número ni código de seguridad.
           </p>
         </aside>
       </div>

@@ -214,7 +214,7 @@ export function CartPage() {
                 disabled={unavailable}
                 onClick={() => dispatch(beginCartCheckout())}
               >
-                Continuar con la entrega
+                Pagar con tarjeta de crédito
                 <Icon name="arrow" />
               </button>
             )}

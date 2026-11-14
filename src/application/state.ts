@@ -7,6 +7,8 @@ import type {
   Transaction,
 } from '../domain/contracts';
 export interface CheckoutState {
+  paymentInProgress: boolean;
+  paymentSubmitted: boolean;
   providerPaymentId: string | null;
   productId: string | null;
   items: { productId: string; quantity: number }[];
@@ -35,6 +37,8 @@ export interface AppState {
 }
 export function emptyCheckout(): CheckoutState {
   return {
+    paymentInProgress: false,
+    paymentSubmitted: false,
     providerPaymentId: null,
     productId: null,
     items: [],
@@ -181,11 +185,32 @@ const slice = createSlice({
       state.checkout.attempted = true;
       state.checkout.error = null;
     },
+    cardDetailsRequested(state) {
+      state.checkout.step = 'details';
+      state.checkout.phase = 'idle';
+      state.checkout.error = null;
+      state.checkout.paymentInProgress = false;
+    },
+    cardReviewRequested(state) {
+      state.checkout.step = 'review';
+      state.checkout.quote = state.checkout.transaction;
+    },
+    paymentUiStarted(state) {
+      state.checkout.paymentInProgress = true;
+    },
+    paymentUiClosed(state) {
+      state.checkout.paymentInProgress = false;
+    },
+    paymentSubmissionStarted(state) {
+      state.checkout.paymentSubmitted = true;
+    },
     paymentIdentified(state, action: PayloadAction<string>) {
       if (state.checkout.transactionId)
         state.checkout.providerPaymentId = action.payload;
     },
     transactionReady(state, action: PayloadAction<Transaction>) {
+      if (action.payload.status !== 'PENDING')
+        state.checkout.paymentInProgress = false;
       Object.assign(state.checkout, {
         transaction: action.payload,
         transactionId: action.payload.id,

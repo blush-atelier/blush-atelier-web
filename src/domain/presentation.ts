@@ -129,10 +129,6 @@ export function errorMessage(error: ApiError | null): string {
       return 'La sesión de pago venció. Actualiza el estado; si ya pagaste, espera la confirmación.';
     case 'PaymentProviderUnavailable':
       return 'Wompi no respondió. No abras otra compra: actualiza el estado para verificar el intento.';
-    case 'PaymentWidgetUnavailable':
-      return 'No pudimos abrir Wompi. Revisa tu conexión y vuelve a intentar desde este pedido.';
-    case 'PaymentWidgetBusy':
-      return 'Ya hay un formulario de pago abierto.';
     case 'InvalidPaymentState':
       return 'Este pedido no permite iniciar otro pago. Actualiza su estado.';
     case 'PaymentIdentityMismatch':

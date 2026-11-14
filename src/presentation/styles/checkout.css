@@ -117,19 +117,6 @@
     border-radius: 12px;
     font-size: 13px;
   }
-  .payment-note-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-  .payment-note-label small {
-    font-size: 9px;
-    color: var(--rose);
-    font-weight: 500;
-  }
   .payment-note p {
     color: var(--muted);
     font-size: 11px;

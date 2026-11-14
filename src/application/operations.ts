@@ -1,3 +1,4 @@
+import type { CardInput, CardConfiguration, CardPreview } from '../domain/card';
 import type {
   ApiError,
   CheckoutForm,
@@ -327,6 +328,7 @@ export const refreshPayment =
       dispatch(actions.checkoutFailed({ error: verified.error }));
       return false;
     }
+    if (verified.value.submitted) dispatch(actions.paymentSubmissionStarted());
     const result = await api.getTransaction(current.transactionId);
     if (!result.ok) {
       dispatch(actions.checkoutFailed({ error: result.error }));
@@ -339,7 +341,7 @@ export const refreshPayment =
 
 export const startPayment =
   (): AppThunk =>
-  async (dispatch, getState, { api, payment }) => {
+  async (dispatch, getState, { api, card }) => {
     const current = getState().checkout;
     if (
       current.phase !== 'idle' ||
@@ -347,70 +349,119 @@ export const startPayment =
       current.transaction?.status !== 'PENDING'
     )
       return false;
-    if (current.providerPaymentId) return dispatch(refreshPayment());
-    if (!payment) {
-      dispatch(
-        actions.checkoutFailed({
-          error: { code: 'PaymentNotConfigured', status: 503 },
-        }),
-      );
-      return false;
-    }
-    dispatch(actions.operationStarted('paying'));
-    try {
-      const session = await api.preparePayment(current.transactionId);
-      if (!session.ok) {
-        dispatch(actions.checkoutFailed({ error: session.error }));
-        return false;
-      }
-      if (
-        session.value.reference !== current.transaction.reference ||
-        session.value.amountMinor !== current.transaction.totalMinor
-      ) {
-        dispatch(
-          actions.checkoutFailed({
-            error: { code: 'InvalidResponse', status: 502 },
-          }),
-        );
-        return false;
-      }
-      // La sesión firmada vive en esta llamada, no en Redux ni en la persistencia.
-      const opened = await payment.open(session.value);
-      if (!opened.ok) {
-        dispatch(
-          actions.checkoutFailed({ error: { code: opened.error, status: 0 } }),
-        );
-        return false;
-      }
-      if (opened.value.providerPaymentId)
-        dispatch(actions.paymentIdentified(opened.value.providerPaymentId));
-      const verified = await api.verifyPayment(
-        current.transactionId,
-        opened.value.providerPaymentId ??
-          current.providerPaymentId ??
-          undefined,
-      );
+    if (card) {
+      dispatch(actions.operationStarted('paying'));
+      const verified = await api.verifyPayment(current.transactionId);
       if (!verified.ok) {
         dispatch(actions.checkoutFailed({ error: verified.error }));
         return false;
       }
-      const result = await api.getTransaction(current.transactionId);
-      if (!result.ok) {
-        dispatch(actions.checkoutFailed({ error: result.error }));
+      if (verified.value.submitted || current.providerPaymentId) {
+        dispatch(actions.operationStarted('idle'));
+        return dispatch(refreshPayment());
+      }
+      const authorization = card.authorization();
+      if (!authorization || !api.chargePayment) {
+        dispatch(actions.cardDetailsRequested());
         return false;
       }
-      dispatch(actions.transactionReady(result.value));
-      void dispatch(loadProducts());
-      return true;
-    } catch {
-      dispatch(
-        actions.checkoutFailed({ error: { code: 'NetworkError', status: 0 } }),
-      );
+      dispatch(actions.operationStarted('paying'));
+      dispatch(actions.paymentSubmissionStarted());
+      try {
+        const charged = await api.chargePayment(
+          current.transactionId,
+          authorization,
+        );
+        card.clear();
+        if (!charged.ok) {
+          dispatch(actions.checkoutFailed({ error: charged.error }));
+          return false;
+        }
+        dispatch(actions.operationStarted('idle'));
+        return dispatch(refreshPayment());
+      } catch {
+        card.clear();
+        dispatch(actions.checkoutFailed({ error: unexpected }));
+        return false;
+      }
+    }
+    dispatch(
+      actions.checkoutFailed({
+        error: { code: 'PaymentNotConfigured', status: 503 },
+      }),
+    );
+    return false;
+  };
+
+export const checkoutAndPay =
+  (): AppThunk =>
+  async (dispatch, getState, { card }) => {
+    if (
+      getState().checkout.phase !== 'idle' ||
+      getState().checkout.paymentInProgress
+    )
+      return false;
+    if (card && !card.authorization()) {
+      dispatch(actions.cardDetailsRequested());
       return false;
     }
+    if (card) dispatch(actions.paymentUiStarted());
+    if (
+      !getState().checkout.transactionId &&
+      !(await dispatch(reserveCheckout()))
+    ) {
+      dispatch(actions.paymentUiClosed());
+      return false;
+    }
+    void dispatch(startPayment());
+    return true;
   };
-export const checkoutAndPay = (): AppThunk => async (dispatch) => {
-  if (!(await dispatch(reserveCheckout()))) return false;
-  void dispatch(startPayment());
-  return true;
-};
+
+export const cardEnabled =
+  (): AppThunk<boolean> =>
+  (_d, _s, { card }) =>
+    Boolean(card);
+export const loadCardConfiguration =
+  (): AppThunk<
+    Promise<import('../domain/contracts').ApiResult<CardConfiguration>>
+  > =>
+  (_d, _s, { card }) =>
+    card
+      ? card.configuration()
+      : Promise.resolve({
+          ok: false,
+          error: { code: 'PaymentNotConfigured', status: 503 },
+        });
+export const clearCard =
+  (): AppThunk<void> =>
+  (_d, _s, { card }) =>
+    card?.clear();
+export const prepareCardCheckout =
+  (
+    form: CheckoutForm,
+    input: CardInput,
+  ): AppThunk<Promise<CardPreview | null>> =>
+  async (dispatch, getState, { card }) => {
+    if (
+      getState().checkout.phase !== 'idle' ||
+      getState().checkout.paymentInProgress
+    )
+      return null;
+    if (!card || getState().checkout.phase !== 'idle') return null;
+    dispatch(actions.operationStarted('preparing'));
+    const prepared = await card.prepare(input);
+    if (!prepared.ok) {
+      dispatch(actions.checkoutFailed({ error: prepared.error }));
+      return null;
+    }
+    dispatch(actions.operationStarted('idle'));
+    if (getState().checkout.transactionId) {
+      dispatch(actions.cardReviewRequested());
+      return prepared.value;
+    }
+    if (!(await dispatch(prepareCheckout(form)))) {
+      card.clear();
+      return null;
+    }
+    return prepared.value;
+  };

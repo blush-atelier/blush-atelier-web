@@ -6,7 +6,6 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       __API_BASE_URL__: JSON.stringify(env.VITE_API_BASE_URL || ''),
-      __WOMPI_WIDGET_URL__: JSON.stringify(env.VITE_WOMPI_WIDGET_URL || ''),
     },
     server: {
       host: '0.0.0.0',

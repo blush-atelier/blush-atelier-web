@@ -1,5 +1,3 @@
-import { paymentSession } from './payment-fixtures';
-import type { PaymentWidgetPort } from '../src/domain/contracts';
 import { selectOption } from './select-helper';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
@@ -28,11 +26,9 @@ function setup(
   path = '/',
   saved: SafeProgress | null = null,
   api = apiFixture(),
-  payment?: PaymentWidgetPort,
 ) {
   const persistence = memoryProgress(saved);
   const store = createAppStore({
-    payment,
     api,
     progress: persistence,
     runtime: { newKey: () => 'checkout-new-request-0002' },
@@ -54,7 +50,7 @@ async function openDetails(user: ReturnType<typeof userEvent.setup>) {
   if (screen.queryByRole('dialog', { name: 'Tu selección.' }))
     await user.click(screen.getByRole('link', { name: 'Revisar carrito' }));
   await user.click(
-    await screen.findByRole('button', { name: 'Continuar con la entrega' }),
+    await screen.findByRole('button', { name: 'Pagar con tarjeta de crédito' }),
   );
   return screen.getByRole('dialog');
 }
@@ -595,44 +591,4 @@ test('añadir abre vista lateral sin navegar, acumula y devuelve el foco al cerr
     await screen.findByRole('heading', { name: 'Tu próximo ritual.' }),
   ).toBeVisible();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-});
-
-test('el Backdrop crea PENDING antes de abrir Wompi y muestra aprobación verificada por API', async () => {
-  const api = apiFixture();
-  api.preparePayment.mockResolvedValue(success(paymentSession));
-  api.verifyPayment.mockImplementation(async (_id, providerId) => {
-    if (providerId)
-      api.getTransaction.mockResolvedValue(
-        success({
-          ...transaction,
-          status: 'APPROVED',
-          reservationStatus: 'CONFIRMED',
-        }),
-      );
-    return success({ verified: Boolean(providerId) });
-  });
-  const payment = {
-    open: jest.fn().mockResolvedValue({
-      ok: true,
-      value: { providerPaymentId: 'provider-1' },
-    }),
-  };
-  const { user, persistence } = setup('/', progress, api, payment);
-  await user.click(
-    await screen.findByRole('button', { name: 'Continuar con el pago' }),
-  );
-  expect(
-    await screen.findByRole('heading', {
-      name: 'Gracias por elegir tu color.',
-    }),
-  ).toBeVisible();
-  expect(api.createPending).toHaveBeenCalledTimes(1);
-  expect(api.createPending.mock.invocationCallOrder[0]).toBeLessThan(
-    api.preparePayment.mock.invocationCallOrder[0],
-  );
-  expect(payment.open).toHaveBeenCalledTimes(1);
-  expect(api.verifyPayment).toHaveBeenCalledWith(transaction.id, 'provider-1');
-  expect(JSON.stringify(persistence.current)).not.toContain(
-    paymentSession.integrity,
-  );
 });

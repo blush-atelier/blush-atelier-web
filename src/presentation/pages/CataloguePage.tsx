@@ -371,10 +371,7 @@ export function CataloguePage() {
         <div className="faq-items">
           <details>
             <summary>¿Se hará algún cobro?</summary>
-            <p>
-              Solo se realizan pagos de prueba mediante Wompi Sandbox. No uses
-              tarjetas reales; consulta el estado del pedido después de pagar.
-            </p>
+            <p>Pagos procesados con Wompi · Entorno de pruebas.</p>
           </details>
           <details>
             <summary>¿Cuánto dura mi reserva?</summary>

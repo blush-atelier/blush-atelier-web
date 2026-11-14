@@ -5,7 +5,6 @@ import type {
   Product,
   Quote,
   Transaction,
-  PaymentSession,
 } from '../domain/contracts';
 type RecordValue = Record<string, unknown>;
 const record = (value: unknown): value is RecordValue =>
@@ -104,8 +103,6 @@ const codes = new Set([
   'PaymentCurrencyMismatch',
   'InvalidPaymentState',
   'InvalidPaymentInput',
-  'PaymentWidgetUnavailable',
-  'PaymentWidgetBusy',
   'SessionRequired',
   'DeliveryNotFound',
   'ProductNotFound',
@@ -133,7 +130,10 @@ export function createHttpApi(
     key?: string,
   ): Promise<ApiResult<T>> {
     const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), 15000);
+    const timer = setTimeout(
+      () => abort.abort(),
+      path.endsWith('/payments') ? 25000 : 15000,
+    );
     try {
       const headers: Record<string, string> = {};
       if (body !== undefined) {
@@ -235,46 +235,57 @@ export function createHttpApi(
     reservationStatus: value.reservationStatus,
     reservationExpiresAt: value.reservationExpiresAt,
   });
-  const paymentSession = (value: unknown): PaymentSession | null => {
-    if (
-      !record(value) ||
-      typeof value.reference !== 'string' ||
-      !value.reference.length ||
-      value.reference.length > 80 ||
-      !money(value.amountMinor) ||
-      BigInt(value.amountMinor) <= 0n ||
-      BigInt(value.amountMinor) > BigInt(Number.MAX_SAFE_INTEGER) ||
-      value.currency !== 'COP' ||
-      typeof value.publicKey !== 'string' ||
-      !/^pub_(?:test_|stagtest)[A-Za-z0-9_-]+$/.test(value.publicKey) ||
-      typeof value.integrity !== 'string' ||
-      !/^[a-f0-9]{64}$/i.test(value.integrity) ||
-      typeof value.expiresAt !== 'string' ||
-      !Number.isFinite(Date.parse(value.expiresAt))
-    )
-      return null;
-    return {
-      reference: value.reference,
-      amountMinor: value.amountMinor,
-      currency: 'COP',
-      publicKey: value.publicKey,
-      integrity: value.integrity,
-      expiresAt: value.expiresAt,
-    };
-  };
   return {
-    preparePayment: (transactionId) =>
+    cardConfiguration: () =>
+      send('/payments/card-configuration', (value) => {
+        if (
+          !record(value) ||
+          ![
+            'apiUrl',
+            'publicKey',
+            'encryptionKey',
+            'privacyUrl',
+            'personalDataUrl',
+            'acceptanceToken',
+            'personalDataToken',
+          ].every((k) => typeof value[k] === 'string' && value[k].length > 0)
+        )
+          return null;
+        return {
+          apiUrl: value.apiUrl,
+          publicKey: value.publicKey,
+          encryptionKey: value.encryptionKey,
+          privacyUrl: value.privacyUrl,
+          personalDataUrl: value.personalDataUrl,
+          acceptanceToken: value.acceptanceToken,
+          personalDataToken: value.personalDataToken,
+        } as import('../domain/card').CardConfiguration;
+      }),
+    chargePayment: (id, input) =>
       send(
-        `/transactions/${encodeURIComponent(transactionId)}/payment-session`,
-        paymentSession,
-        { method: 'CARD' },
+        `/transactions/${encodeURIComponent(id)}/payments`,
+        (value) =>
+          record(value) && value.accepted === true ? { accepted: true } : null,
+        {
+          token: input.token,
+          acceptanceToken: input.acceptanceToken,
+          personalDataToken: input.personalDataToken,
+          installments: input.installments,
+          privacyAccepted: input.privacyAccepted,
+          personalDataAccepted: input.personalDataAccepted,
+        },
       ),
     verifyPayment: (transactionId, providerPaymentId) =>
       send(
         `/transactions/${encodeURIComponent(transactionId)}/payment-verification`,
         (value) =>
           record(value) && typeof value.verified === 'boolean'
-            ? { verified: value.verified }
+            ? {
+                verified: value.verified,
+                ...(typeof value.submitted === 'boolean'
+                  ? { submitted: value.submitted }
+                  : {}),
+              }
             : null,
         providerPaymentId ? { providerPaymentId } : {},
       ),
