@@ -252,26 +252,26 @@ export function CheckoutDialog() {
               Estamos confirmando el resultado con Wompi. No necesitas volver a
               pagar.
             </p>
-            {checkout.phase === 'idle' && (
-              <div className="payment-completing-actions">
-                <button
-                  className="button button--dark"
-                  onClick={() => void dispatch(refreshPayment())}
-                >
-                  Consultar estado
-                </button>
-                <button
-                  className="text-button"
-                  onClick={() => {
-                    dispatch(actions.paymentUiClosed());
-                    dispatch(actions.checkoutClosed());
-                    navigate('/pedido');
-                  }}
-                >
-                  Ver mi pedido
-                </button>
-              </div>
-            )}
+            <div className="payment-completing-actions">
+              <button
+                className="button button--dark"
+                disabled={busy}
+                onClick={() => void dispatch(refreshPayment())}
+              >
+                Consultar estado
+              </button>
+              <button
+                className="text-button"
+                disabled={busy}
+                onClick={() => {
+                  dispatch(actions.paymentUiClosed());
+                  dispatch(actions.checkoutClosed());
+                  navigate('/pedido');
+                }}
+              >
+                Ver mi pedido
+              </button>
+            </div>
           </div>
         ) : checkout.step === 'details' ? (
           <form onSubmit={submit} noValidate>

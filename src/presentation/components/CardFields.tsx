@@ -90,6 +90,8 @@ export function CardFields({
                 }
                 onChange={(e) => {
                   let next = e.target.value;
+                  if (field.name === 'holder')
+                    next = next.replace(/[^\p{L}\p{M} .’'-]/gu, '');
                   if (field.name === 'number')
                     next = next
                       .replace(/\D/g, '')

@@ -5,9 +5,12 @@ export function usePaymentSynchronization() {
   const dispatch = useAppDispatch(),
     id = useAppSelector((s) => s.checkout.transactionId),
     status = useAppSelector((s) => s.checkout.transaction?.status),
+    editing = useAppSelector(
+      (s) => s.checkout.step === 'review' && !s.checkout.paymentSubmitted,
+    ),
     expired = useAppSelector((s) => s.checkout.sessionExpired);
   useEffect(() => {
-    if (!id || expired || (status && status !== 'PENDING')) return;
+    if (!id || expired || editing || (status && status !== 'PENDING')) return;
     const check = () => {
       if (document.visibilityState === 'visible')
         void dispatch(refreshPayment());
@@ -23,5 +26,5 @@ export function usePaymentSynchronization() {
       window.removeEventListener('focus', check);
       document.removeEventListener('visibilitychange', check);
     };
-  }, [dispatch, id, status, expired]);
+  }, [dispatch, id, status, expired, editing]);
 }

@@ -191,7 +191,12 @@ export const resumeCheckout =
   (): AppThunk =>
   async (dispatch, getState, { api }) => {
     const current = getState().checkout;
-    if (current.phase !== 'idle' || current.sessionExpired) return false;
+    if (
+      current.phase !== 'idle' ||
+      current.sessionExpired ||
+      current.paymentChecking
+    )
+      return false;
     if (current.transactionId) {
       dispatch(actions.operationStarted('resuming'));
       const result = await api.getTransaction(current.transactionId);
@@ -328,11 +333,13 @@ export const refreshPayment =
     if (
       current.phase !== 'idle' ||
       !current.transactionId ||
-      current.sessionExpired
+      current.sessionExpired ||
+      current.paymentChecking
     )
       return false;
     if (current.paymentInProgress && !current.paymentSubmitted) return false;
-    dispatch(actions.operationStarted('resuming'));
+    // La consulta de fondo no cambia la fase visual ni desmonta las acciones.
+    dispatch(actions.paymentCheckStarted());
     const verified = await api.verifyPayment(
       current.transactionId,
       providerPaymentId ?? current.providerPaymentId ?? undefined,
@@ -340,7 +347,7 @@ export const refreshPayment =
     if (getState().checkout.transactionId !== current.transactionId)
       return false;
     if (!verified.ok) {
-      dispatch(actions.checkoutFailed({ error: verified.error }));
+      dispatch(actions.paymentCheckFailed(verified.error));
       return false;
     }
     if (verified.value.submitted) dispatch(actions.paymentSubmissionStarted());
@@ -348,11 +355,17 @@ export const refreshPayment =
     if (getState().checkout.transactionId !== current.transactionId)
       return false;
     if (!result.ok) {
-      dispatch(actions.checkoutFailed({ error: result.error }));
+      dispatch(actions.paymentCheckFailed(result.error));
       return false;
     }
-    dispatch(actions.transactionReady(result.value));
-    void dispatch(loadProducts());
+    dispatch(actions.paymentChecked(result.value));
+    if (
+      current.transaction?.status !== result.value.status ||
+      current.transaction?.reservationStatus !==
+        result.value.reservationStatus ||
+      !getState().products.length
+    )
+      void dispatch(loadProducts());
     return true;
   };
 

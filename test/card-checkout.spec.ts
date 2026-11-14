@@ -405,3 +405,19 @@ it('referencia inválida, sesión ajena y proveedor caído no revelan ni inventa
     true,
   );
 });
+
+it.each(['Ana 123', '123456', 'Ana🙂', 'A.', '--'])(
+  'rechaza titular inválido %s antes de tokenizar',
+  (holder) => {
+    expect(validateCard({ ...input, holder })).toHaveProperty('holder');
+  },
+);
+it.each([
+  'Ana María',
+  'MARÍA-JOSÉ O’NEILL',
+  'José Pérez',
+  '李 明',
+  'Jean-Luc Dumas',
+])('permite letras internacionales y separadores de nombre: %s', (holder) => {
+  expect(validateCard({ ...input, holder }).holder).toBeUndefined();
+});

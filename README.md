@@ -2,7 +2,7 @@
 
 Frontend React de Blush Atelier. Repositorio independiente de [blush-atelier-api](https://github.com/blush-atelier/blush-atelier-api).
 
-Funciona localmente: catálogo, búsqueda/filtros, detalle, carrito, formulario de entrega, resumen calculado por API, reserva `PENDING` y recuperación tras refrescar. El pago utiliza nuestro modal y tokenización cifrada directa con Wompi Sandbox. Configura las llaves únicamente en el backend. Aprobación y rechazo se verificaron contra UAT Sandbox mediante los adaptadores y API local; falta validar esta iteración en navegador y AWS.
+Funciona localmente: catálogo, búsqueda/filtros, detalle, carrito, formulario de entrega, resumen calculado por API, reserva `PENDING` y recuperación tras refrescar. El pago utiliza nuestro modal y tokenización cifrada directa con Wompi Sandbox. Configura las llaves únicamente en el backend. Aprobación y rechazo se verificaron contra UAT Sandbox mediante los adaptadores y API local; la usuaria confirmó el recorrido principal; faltan repetir las dos correcciones recientes y validar AWS.
 
 ## Iniciar en WSL
 
@@ -74,7 +74,7 @@ npm run test:cov
 npm run build
 ```
 
-Jest: **125 pruebas**, 13 suites. Cobertura local medida: **96,69% statements · 92,74% branches · 97,30% functions · 96,60% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
+Jest: **139 pruebas**, 13 suites. Cobertura local medida: **96,88% statements · 92,66% branches · 97,33% functions · 96,81% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
 
 CI ejecuta `npm ci` y todos los comandos anteriores en PR hacia development/staging/production y pushes a esas ramas o feature/*. La promoción es `feature/* → development → staging → production`; requiere configurar protecciones en GitHub. Workflow definido; ejecución remota pendiente. CD todavía no está habilitado.
 
@@ -120,3 +120,9 @@ productos y, al completar nuevamente tus datos, se registra una sesión nueva. E
 recupera permisos del pedido anterior ni cancela un pago que siga en proceso.
 El detalle ofrece productos disponibles de la misma categoría primero y un botón
 visible de **Volver a la tienda**. No requiere dependencias nuevas.
+
+Revisión manual de la usuaria (14/11/2026): sesión vencida, aprobación/rechazo,
+recarga/desconexión, doble clic y stock correctos. Se corrigieron los hallazgos de
+nombre de tarjeta numérico y botones intermitentes: el titular acepta letras Unicode
+y separadores de nombre; las consultas de fondo no alternan la fase visual ni cierran
+el resumen. Repetir ambos casos. Se conserva el espaciado del botón ajustado por la usuaria.

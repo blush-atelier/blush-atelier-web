@@ -1,3 +1,4 @@
+import { CheckoutDialog } from '../src/presentation/components/CheckoutDialog';
 import { MemoryRouter } from 'react-router-dom';
 import { PaymentAlerts } from '../src/presentation/components/PaymentAlerts';
 import { act, render, screen, fireEvent } from '@testing-library/react';
@@ -220,4 +221,80 @@ it('la alerta de sesión permite volver a comprar y limpia referencias y token a
   });
   expect(card.clear).toHaveBeenCalled();
   expect(store.dispatch(addToCart(product.id, 1)).ok).toBe(true);
+});
+
+it('la consulta conserva fase, botones y nodos del modal entre ciclos PENDING', async () => {
+  const api = apiFixture(),
+    card = {
+      configuration: jest.fn(),
+      prepare: jest.fn(),
+      authorization: jest.fn(),
+      clear: jest.fn(),
+    },
+    store = createAppStore({
+      api,
+      card,
+      progress: memoryProgress({ ...progress, transactionId: transaction.id }),
+      runtime: { newKey: () => 'stable-payment-request' },
+    });
+  store.dispatch(actions.transactionReady(transaction));
+  store.dispatch(actions.paymentSubmissionStarted());
+  store.dispatch(actions.paymentUiStarted());
+  render(
+    <Provider store={store}>
+      <MemoryRouter>
+        <CheckoutDialog />
+      </MemoryRouter>
+    </Provider>,
+  );
+  const consult = screen.getByRole('button', { name: 'Consultar estado' }),
+    order = screen.getByRole('button', { name: 'Ver mi pedido' });
+  for (let i = 0; i < 2; i++) {
+    let finish!: (v: Awaited<ReturnType<typeof api.verifyPayment>>) => void;
+    api.verifyPayment.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    let pending!: Promise<boolean>;
+    await act(async () => {
+      pending = store.dispatch(refreshPayment());
+    });
+    expect(store.getState().checkout.phase).toBe('idle');
+    expect(store.getState().checkout.paymentChecking).toBe(true);
+    expect(screen.getByRole('button', { name: 'Consultar estado' })).toBe(
+      consult,
+    );
+    expect(screen.getByRole('button', { name: 'Ver mi pedido' })).toBe(order);
+    expect(consult).toBeEnabled();
+    await act(async () => {
+      finish(success({ verified: false, submitted: true }));
+      await pending;
+    });
+    expect(screen.getByRole('button', { name: 'Ver mi pedido' })).toBe(order);
+    expect(store.getState().checkout.paymentChecking).toBe(false);
+  }
+});
+it('consultar un PENDING no cierra el resumen ni borra los campos que se están editando', async () => {
+  const f = fixture();
+  f.store.dispatch(actions.cardDetailsRequested());
+  expect(await f.store.dispatch(refreshPayment())).toBe(true);
+  expect(f.store.getState().checkout.step).toBe('review');
+});
+
+it('no recarga el catálogo en cada PENDING; refresca stock cuando cambia el resultado', async () => {
+  const f = fixture();
+  await f.store.dispatch(refreshPayment());
+  await f.store.dispatch(refreshPayment());
+  expect(f.api.listProducts).not.toHaveBeenCalled();
+  f.api.getTransaction.mockResolvedValue(
+    success({
+      ...transaction,
+      status: 'APPROVED',
+      reservationStatus: 'CONFIRMED',
+    }),
+  );
+  await f.store.dispatch(refreshPayment());
+  expect(f.api.listProducts).toHaveBeenCalledTimes(1);
 });

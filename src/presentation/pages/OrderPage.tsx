@@ -102,7 +102,7 @@ function CurrentOrder() {
           error={cardMode ? null : checkout.error}
           retry={() => void dispatch(resumeCheckout())}
         />
-        {checkout.phase !== 'idle' ? (
+        {checkout.phase !== 'idle' || checkout.paymentChecking ? (
           <Loading label="Consultando tu selección…" />
         ) : (
           <div className="empty-order">

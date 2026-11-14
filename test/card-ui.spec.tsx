@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { selectOption } from './select-helper';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
@@ -153,4 +153,13 @@ it('detecta Mastercard y cerrar descarta la tarjeta', async () => {
   expect(screen.getByLabelText('Tarjeta MASTERCARD detectada')).toBeVisible();
   await f.user.click(screen.getByRole('button', { name: 'Cerrar checkout' }));
   expect(f.card.clear).toHaveBeenCalled();
+});
+
+it('el campo titular no acepta números al escribir o pegar', async () => {
+  const f = setup();
+  const holder = await screen.findByLabelText('Nombre en la tarjeta');
+  fireEvent.change(holder, { target: { value: 'Ana123 María456' } });
+  expect(holder).toHaveValue('Ana María');
+  await f.user.type(holder, '789');
+  expect(holder).toHaveValue('Ana María');
 });

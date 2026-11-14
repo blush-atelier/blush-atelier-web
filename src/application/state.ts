@@ -7,6 +7,7 @@ import type {
   Transaction,
 } from '../domain/contracts';
 export interface CheckoutState {
+  paymentChecking: boolean;
   sessionExpired: boolean;
   paymentInProgress: boolean;
   paymentSubmitted: boolean;
@@ -38,6 +39,7 @@ export interface AppState {
 }
 export function emptyCheckout(): CheckoutState {
   return {
+    paymentChecking: false,
     sessionExpired: false,
     paymentInProgress: false,
     paymentSubmitted: false,
@@ -194,6 +196,27 @@ const slice = createSlice({
       state.checkout.error = null;
       state.checkout.paymentInProgress = false;
     },
+    paymentCheckStarted(state) {
+      state.checkout.paymentChecking = true;
+    },
+    paymentCheckFailed(state, action: PayloadAction<ApiError>) {
+      state.checkout.paymentChecking = false;
+      state.checkout.error = action.payload;
+      if (action.payload.code === 'SessionRequired') {
+        state.checkout.sessionExpired = true;
+        state.checkout.paymentInProgress = false;
+        state.checkout.phase = 'idle';
+      }
+    },
+    paymentChecked(state, action: PayloadAction<Transaction>) {
+      state.checkout.paymentChecking = false;
+      state.checkout.transaction = action.payload;
+      state.checkout.error = null;
+      if (action.payload.status !== 'PENDING') {
+        state.checkout.paymentInProgress = false;
+        state.checkout.step = 'result';
+      }
+    },
     paymentUiStarted(state) {
       state.checkout.paymentInProgress = true;
     },
@@ -208,6 +231,7 @@ const slice = createSlice({
         state.checkout.providerPaymentId = action.payload;
     },
     transactionReady(state, action: PayloadAction<Transaction>) {
+      state.checkout.paymentChecking = false;
       if (action.payload.status !== 'PENDING')
         state.checkout.paymentInProgress = false;
       Object.assign(state.checkout, {
@@ -223,6 +247,7 @@ const slice = createSlice({
       action: PayloadAction<{ error: ApiError; uncertain?: boolean }>,
     ) {
       state.checkout.phase = 'idle';
+      state.checkout.paymentChecking = false;
       state.checkout.error = action.payload.error;
       if (action.payload.error.code === 'SessionRequired') {
         state.checkout.sessionExpired = true;
