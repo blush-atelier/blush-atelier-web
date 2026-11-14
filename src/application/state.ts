@@ -7,6 +7,7 @@ import type {
   Transaction,
 } from '../domain/contracts';
 export interface CheckoutState {
+  sessionExpired: boolean;
   paymentInProgress: boolean;
   paymentSubmitted: boolean;
   providerPaymentId: string | null;
@@ -37,6 +38,7 @@ export interface AppState {
 }
 export function emptyCheckout(): CheckoutState {
   return {
+    sessionExpired: false,
     paymentInProgress: false,
     paymentSubmitted: false,
     providerPaymentId: null,
@@ -222,6 +224,10 @@ const slice = createSlice({
     ) {
       state.checkout.phase = 'idle';
       state.checkout.error = action.payload.error;
+      if (action.payload.error.code === 'SessionRequired') {
+        state.checkout.sessionExpired = true;
+        state.checkout.paymentInProgress = false;
+      }
       if (action.payload.uncertain === false) state.checkout.attempted = false;
     },
     checkoutEdited(state) {

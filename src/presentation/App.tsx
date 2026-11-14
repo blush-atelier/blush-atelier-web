@@ -11,7 +11,9 @@ import { ProductPage } from './pages/ProductPage';
 import { CartPage } from './pages/CartPage';
 import { OrderPage } from './pages/OrderPage';
 import './styles.css';
+import { usePaymentSynchronization } from './usePaymentSynchronization';
 export function App() {
+  usePaymentSynchronization();
   const [cartPreview, setCartPreview] = useState(false);
   const dispatch = useAppDispatch();
   const warning = useAppSelector((state) => state.persistenceWarning);

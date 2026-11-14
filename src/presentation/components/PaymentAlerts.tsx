@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { cardEnabled } from '../../application/operations';
+import { useNavigate } from 'react-router-dom';
+import { cardEnabled, restartCheckout } from '../../application/operations';
 import { errorMessage } from '../../domain/presentation';
 import { useAppDispatch, useAppSelector } from '../hooks';
 export function PaymentAlerts() {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch(),
     error = useAppSelector((s) => s.checkout.error),
     [enabled, setEnabled] = useState(false),
@@ -20,7 +22,7 @@ export function PaymentAlerts() {
       dialog.current?.close();
       if (previous?.isConnected) previous.focus();
     };
-  }, [error, enabled]);
+  }, [error?.code, enabled]);
   if (!enabled || !error) return null;
   return (
     <dialog
@@ -35,9 +37,14 @@ export function PaymentAlerts() {
         <button
           ref={button}
           className="button button--dark"
-          onClick={() => dialog.current?.close()}
+          onClick={() => {
+            if (error.code === 'SessionRequired') {
+              dispatch(restartCheckout());
+              navigate('/');
+            } else dialog.current?.close();
+          }}
         >
-          Entendido
+          {error.code === 'SessionRequired' ? 'Volver a comprar' : 'Entendido'}
         </button>
       </div>
     </dialog>

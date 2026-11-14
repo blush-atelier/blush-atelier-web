@@ -6,8 +6,8 @@ import {
   refreshPayment,
   startPayment,
   cardEnabled,
+  restartCheckout,
 } from '../../application/operations';
-import { actions } from '../../application/state';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { OrderSummary } from '../components/OrderSummary';
 import { ProductArt } from '../components/ProductArt';
@@ -75,29 +75,9 @@ function CurrentOrder() {
     setCardMode(dispatch(cardEnabled()));
   }, [dispatch]);
   const [copied, setCopied] = useState('');
-  const transaction =
-    checkout.error?.code === 'SessionRequired' ? null : checkout.transaction;
-  useEffect(() => {
-    if (!checkout.transactionId && !checkout.attempted) return;
-    void dispatch(checkout.transactionId ? refreshPayment() : resumeCheckout());
-    if (
-      checkout.transaction?.status &&
-      checkout.transaction.status !== 'PENDING'
-    )
-      return;
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'visible')
-        void dispatch(refreshPayment());
-    }, 20000);
-    return () => clearInterval(timer);
-  }, [
-    dispatch,
-    checkout.transactionId,
-    checkout.transaction?.status,
-    checkout.attempted,
-  ]);
+  const transaction = checkout.sessionExpired ? null : checkout.transaction;
   const reset = () => {
-    dispatch(actions.checkoutReset());
+    dispatch(restartCheckout());
     navigate('/');
   };
   if (!transaction)
@@ -140,7 +120,7 @@ function CurrentOrder() {
                 Descubrir la tienda <Icon name="arrow" />
               </Link>
             )}
-            {checkout.error?.code === 'SessionRequired' && (
+            {checkout.sessionExpired && (
               <>
                 <p>
                   La sesión anterior ya no permite consultar el pedido. Su

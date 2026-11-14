@@ -191,10 +191,12 @@ export const resumeCheckout =
   (): AppThunk =>
   async (dispatch, getState, { api }) => {
     const current = getState().checkout;
-    if (current.phase !== 'idle') return false;
+    if (current.phase !== 'idle' || current.sessionExpired) return false;
     if (current.transactionId) {
       dispatch(actions.operationStarted('resuming'));
       const result = await api.getTransaction(current.transactionId);
+      if (getState().checkout.transactionId !== current.transactionId)
+        return false;
       if (!result.ok) {
         dispatch(actions.checkoutFailed({ error: result.error }));
         return false;
@@ -211,11 +213,12 @@ export const resumeCheckout =
 function cartLocked(checkout: CheckoutState): boolean {
   return (
     checkout.phase !== 'idle' ||
-    (checkout.attempted && !checkout.transaction) ||
-    Boolean(
-      checkout.transactionId &&
-      (!checkout.transaction || checkout.transaction.status === 'PENDING'),
-    )
+    (!checkout.sessionExpired &&
+      ((checkout.attempted && !checkout.transaction) ||
+        Boolean(
+          checkout.transactionId &&
+          (!checkout.transaction || checkout.transaction.status === 'PENDING'),
+        )))
   );
 }
 
@@ -229,7 +232,7 @@ export const addToCart =
     productId: string,
     quantity: number,
   ): AppThunk<Result<undefined, CartError>> =>
-  (dispatch, getState) => {
+  (dispatch, getState, { card }) => {
     const state = getState(),
       current = state.checkout;
     if (cartLocked(current)) return { ok: false, error: 'CheckoutLocked' };
@@ -240,11 +243,13 @@ export const addToCart =
     if (!product) return { ok: false, error: 'ProductNotFound' };
     if (!Number.isSafeInteger(quantity) || quantity < 1)
       return { ok: false, error: 'InvalidQuantity' };
-    const items = current.transactionId ? [] : current.items;
+    const items =
+      current.transactionId || current.sessionExpired ? [] : current.items;
     const found = items.find((i) => i.productId === productId);
     const next = (found?.quantity ?? 0) + quantity;
     if (next > product.availableStock || (!found && items.length >= 50))
       return { ok: false, error: 'InsufficientStock' };
+    if (current.sessionExpired) card?.clear();
     dispatch(
       storeCart(
         found
@@ -320,18 +325,28 @@ export const refreshPayment =
   (providerPaymentId?: string): AppThunk =>
   async (dispatch, getState, { api }) => {
     const current = getState().checkout;
-    if (current.phase !== 'idle' || !current.transactionId) return false;
+    if (
+      current.phase !== 'idle' ||
+      !current.transactionId ||
+      current.sessionExpired
+    )
+      return false;
+    if (current.paymentInProgress && !current.paymentSubmitted) return false;
     dispatch(actions.operationStarted('resuming'));
     const verified = await api.verifyPayment(
       current.transactionId,
       providerPaymentId ?? current.providerPaymentId ?? undefined,
     );
+    if (getState().checkout.transactionId !== current.transactionId)
+      return false;
     if (!verified.ok) {
       dispatch(actions.checkoutFailed({ error: verified.error }));
       return false;
     }
     if (verified.value.submitted) dispatch(actions.paymentSubmissionStarted());
     const result = await api.getTransaction(current.transactionId);
+    if (getState().checkout.transactionId !== current.transactionId)
+      return false;
     if (!result.ok) {
       dispatch(actions.checkoutFailed({ error: result.error }));
       return false;
@@ -359,6 +374,7 @@ export const startPayment =
         return false;
       }
       if (verified.value.submitted || current.providerPaymentId) {
+        dispatch(actions.paymentSubmissionStarted());
         dispatch(actions.operationStarted('idle'));
         return dispatch(refreshPayment());
       }
@@ -478,4 +494,13 @@ export const lookupOrder =
     const verified = await api.verifyPayment(id);
     if (!verified.ok) return verified;
     return api.getTransaction(id);
+  };
+
+export const restartCheckout =
+  (): AppThunk<boolean> =>
+  (dispatch, getState, { card }) => {
+    if (getState().checkout.phase !== 'idle') return false;
+    card?.clear();
+    dispatch(actions.checkoutReset());
+    return true;
   };
