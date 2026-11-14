@@ -1,110 +1,100 @@
 @layer components {
   .category-discovery {
-    padding-block: 34px 12px;
+    padding-block: 36px;
+    scroll-margin-top: 24px;
   }
   .discovery-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
     margin-bottom: 20px;
   }
   .discovery-heading h2 {
-    font-size: clamp(28px, 3vw, 38px);
-    margin-top: 9px;
+    font-size: clamp(28px, 4vw, 40px);
   }
-  .atelier-flower {
-    color: var(--rose);
-    font-size: 42px;
-    line-height: 1;
-    display: inline-block;
-    transform: rotate(12deg);
+  .discovery-navigation {
+    display: flex;
+    gap: 8px;
+    flex: none;
+  }
+  .discovery-navigation .icon-button {
+    border: 1px solid var(--line);
+    background: transparent;
+    border-radius: 50%;
   }
   .category-discovery-grid {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(210px, 1fr);
-    gap: 14px;
+    grid-auto-columns: 100%;
+    gap: 16px;
     overflow-x: auto;
-    scroll-snap-type: x proximity;
-    padding: 4px 2px 14px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--line) transparent;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
   }
   .category-discovery-card {
-    scroll-snap-align: start;
     display: grid;
-    grid-template-columns: 66px minmax(0, 1fr) 16px;
-    gap: 12px;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr) 24px;
+    gap: 14px;
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
     text-align: left;
-    padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    background: var(--white);
-    min-height: 112px;
-    transition:
-      background var(--duration),
-      transform var(--duration),
-      border-color var(--duration);
+    padding: 0 0 4px;
   }
-  .category-discovery-card .product-art {
-    width: 66px;
-    height: 80px;
-    aspect-ratio: auto;
-    border-radius: 10px;
-    background: var(--rose-soft);
+  .category-discovery-card:focus-visible {
+    outline-offset: -3px;
+  }
+  .category-discovery-card .product-art,
+  .category-placeholder {
+    grid-column: 1/-1;
+    aspect-ratio: 2/1;
+    width: 100%;
+    background: var(--nude);
+    border-radius: 8px;
   }
   .category-discovery-card .product-art img {
+    object-fit: contain;
     padding: 8%;
     mix-blend-mode: multiply;
   }
   .category-discovery-copy {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .category-discovery-copy small {
-    font-size: 10px;
-    line-height: 1.5;
-    color: var(--muted);
+    display: grid;
+    gap: 5px;
   }
   .category-discovery-copy strong {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--cocoa);
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .category-discovery-copy small {
+    font-size: 12px;
+    color: var(--muted);
   }
   .category-discovery-card > .icon {
-    width: 16px;
-    height: 16px;
+    align-self: center;
+    justify-self: end;
+    width: 18px;
+    height: 18px;
     color: var(--rose);
-  }
-  .category-placeholder {
-    width: 66px;
-    height: 80px;
-    background: var(--rose-soft);
-    border-radius: 10px;
   }
   .active-filters {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    margin: -3px 0 20px;
+    margin: 0 0 20px;
   }
   .active-filters button {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     min-height: 44px;
-    padding: 9px 12px;
+    padding: 8px 12px;
     max-width: 100%;
     overflow-wrap: anywhere;
-    border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: 6px;
     background: var(--rose-soft);
     font-size: 12px;
-    color: var(--cocoa);
   }
   .active-filters .icon {
     width: 14px;
@@ -112,43 +102,31 @@
   }
   .active-filters .clear-filters {
     background: transparent;
-    border-color: transparent;
     text-decoration: underline;
     text-underline-offset: 4px;
     color: var(--muted);
   }
-  @media (hover: hover) {
-    .category-discovery-card:hover:not(:disabled) {
-      background: var(--rose-soft);
-      border-color: #cdb6ac;
-      transform: translateY(-3px);
-    }
-  }
 }
 @layer responsive {
-  @media (min-width: 900px) {
-    .category-discovery {
-      padding-top: 40px;
-    }
+  @media (min-width: 600px) {
     .category-discovery-grid {
-      grid-auto-columns: minmax(0, 1fr);
-      overflow: visible;
-      gap: 16px;
+      grid-auto-columns: calc((100% - 16px) / 2);
     }
-    .category-discovery-card {
-      grid-template-columns: 66px minmax(0, 1fr);
-      position: relative;
-    }
-    .category-discovery-card > .icon {
-      display: none;
+    .category-discovery-card .product-art {
+      aspect-ratio: 4/3;
     }
   }
-  @media (min-width: 1200px) {
-    .category-discovery-card {
-      grid-template-columns: 66px minmax(0, 1fr) 16px;
+  @media (min-width: 1000px) {
+    .category-discovery {
+      padding-block: 48px;
+      scroll-margin-top: 120px;
     }
-    .category-discovery-card > .icon {
-      display: block;
+    .category-discovery-grid {
+      grid-auto-columns: calc((100% - 48px) / 4);
+      overflow: visible;
+    }
+    .discovery-navigation {
+      display: none;
     }
   }
 }

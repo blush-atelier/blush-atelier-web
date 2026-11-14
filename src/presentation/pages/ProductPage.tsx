@@ -5,10 +5,9 @@ import { formatMoney, categoryOf, brandOf } from '../../domain/presentation';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { ProductArt } from '../components/ProductArt';
 import { Icon } from '../components/Icon';
-import { ReplaceCartDialog } from '../components/ReplaceCartDialog';
 import type { ApiError } from '../../domain/contracts';
 import { ErrorNotice, Loading } from '../components/Feedback';
-export function ProductPage() {
+export function ProductPage({ onAdded }: { onAdded: () => void }) {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,7 +23,6 @@ export function ProductPage() {
   const detailStatus = useAppSelector((state) => state.detailStatus);
   const detailError = useAppSelector((state) => state.detailError);
   const [quantity, setQuantity] = useState(1);
-  const [replace, setReplace] = useState(false);
   const [cartError, setCartError] = useState<ApiError | null>(null);
   useEffect(() => {
     setQuantity(1);
@@ -50,22 +48,17 @@ export function ProductPage() {
         <Loading label="Preparando los detalles de tu selección…" />
       </div>
     );
-  const begin = (replaceExisting = false) => {
-    const result = dispatch(addToCart(product.id, quantity, replaceExisting));
+  const begin = () => {
+    const result = dispatch(addToCart(product.id, quantity));
     if (result.ok) {
-      setReplace(false);
-      navigate('/carrito');
-      return;
-    }
-    if (result.error === 'DifferentProduct') {
-      setReplace(true);
+      setCartError(null);
+      onAdded();
       return;
     }
     if (result.error === 'CheckoutLocked') {
       navigate('/pedido');
       return;
     }
-    setReplace(false);
     setCartError({
       code:
         result.error === 'InsufficientStock'
@@ -76,12 +69,6 @@ export function ProductPage() {
   };
   return (
     <section className="section-wrap product-page">
-      {replace && (
-        <ReplaceCartDialog
-          onCancel={() => setReplace(false)}
-          onConfirm={() => begin(true)}
-        />
-      )}
       <ErrorNotice error={cartError} />
       <nav className="breadcrumbs" aria-label="Ruta de navegación">
         <Link to={collectionUrl}>
@@ -97,7 +84,7 @@ export function ProductPage() {
           <p className="art-caption">
             {brandOf(product) === 'Atelier'
               ? 'BLUSH ATELIER · Imagen ilustrativa'
-              : 'Fotografía del producto · Catálogo de demostración'}
+              : 'Fotografía del producto'}
           </p>
         </div>
         <div className="detail-copy">
@@ -180,8 +167,8 @@ export function ProductPage() {
             <details>
               <summary>Sobre el pago con tarjeta</summary>
               <p>
-                El pago aún no está habilitado. Esta versión no recoge
-                información de tarjetas ni realiza cobros.
+                Tu tarjeta se cifra y tokeniza directamente con Wompi. No
+                guardamos el número de tarjeta ni el código de seguridad.
               </p>
             </details>
           </div>

@@ -31,10 +31,11 @@
   }
   .error-notice {
     background: #f8e8e5;
-    border-left: 3px solid var(--error);
+    border: 1px solid #c77e84;
+    border-radius: 12px;
     padding: 14px 16px;
     margin: 12px 0 22px;
-    font-size: 12px;
+    font-size: 13px;
     color: #792c34;
   }
   .error-notice .text-button {

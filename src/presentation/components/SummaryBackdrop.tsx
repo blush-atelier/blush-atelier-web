@@ -6,10 +6,12 @@ export function SummaryBackdrop({
   product,
   quantity,
   children,
+  items,
 }: {
   product: Product | null | undefined;
   quantity: number;
   children: ReactNode;
+  items?: { product: Product | null | undefined; quantity: number }[];
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -31,7 +33,13 @@ export function SummaryBackdrop({
             aria-controls="backdrop-product"
             onClick={() => setExpanded((value) => !value)}
           >
-            {expanded ? 'Ocultar producto' : 'Ver mi producto'}
+            {items && items.length > 1
+              ? expanded
+                ? 'Ocultar productos'
+                : 'Ver mis productos'
+              : expanded
+                ? 'Ocultar producto'
+                : 'Ver mi producto'}
             <Icon name={expanded ? 'minus' : 'plus'} />
           </button>
         </div>
@@ -41,14 +49,17 @@ export function SummaryBackdrop({
           aria-hidden={!expanded}
         >
           <div>
-            {product && (
-              <div className="backdrop-product">
-                <ProductArt product={product} />
-                <div>
-                  <h3>{product.name}</h3>
-                  <p>Cantidad: {quantity}</p>
-                </div>
-              </div>
+            {(items ?? [{ product, quantity }]).map(
+              ({ product: entry, quantity: count }) =>
+                entry && (
+                  <div className="backdrop-product" key={entry.id}>
+                    <ProductArt product={entry} />
+                    <div>
+                      <h3>{entry.name}</h3>
+                      <p>Cantidad: {count}</p>
+                    </div>
+                  </div>
+                ),
             )}
           </div>
         </div>

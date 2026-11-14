@@ -33,9 +33,33 @@ export function isProduct(value: unknown): value is Product {
     value.availableStock >= 0
   );
 }
+function isQuoteItem(value: unknown): boolean {
+  return (
+    record(value) &&
+    uuid(value.productId) &&
+    typeof value.quantity === 'number' &&
+    Number.isSafeInteger(value.quantity) &&
+    value.quantity > 0 &&
+    value.quantity <= 2147483647 &&
+    money(value.unitPriceMinor) &&
+    money(value.productAmountMinor) &&
+    BigInt(value.unitPriceMinor) * BigInt(value.quantity) ===
+      BigInt(value.productAmountMinor)
+  );
+}
 export function isQuote(value: unknown): value is Quote {
   return (
     record(value) &&
+    (value.items === undefined ||
+      (Array.isArray(value.items) &&
+        value.items.length >= 2 &&
+        value.items.length <= 50 &&
+        value.items.every(isQuoteItem) &&
+        new Set(value.items.map((i) => i.productId)).size ===
+          value.items.length &&
+        value.items
+          .reduce((sum, i) => sum + BigInt(i.productAmountMinor), 0n)
+          .toString() === value.productAmountMinor)) &&
     uuid(value.productId) &&
     typeof value.quantity === 'number' &&
     Number.isSafeInteger(value.quantity) &&
@@ -68,6 +92,17 @@ export function isTransaction(value: unknown): value is Transaction {
   );
 }
 const codes = new Set([
+  'PaymentNotConfigured',
+  'PaymentSessionExpired',
+  'PaymentProviderUnavailable',
+  'PaymentNotFound',
+  'InvalidProviderResponse',
+  'InvalidPaymentObservation',
+  'PaymentIdentityMismatch',
+  'PaymentAmountMismatch',
+  'PaymentCurrencyMismatch',
+  'InvalidPaymentState',
+  'InvalidPaymentInput',
   'SessionRequired',
   'DeliveryNotFound',
   'ProductNotFound',
@@ -95,7 +130,10 @@ export function createHttpApi(
     key?: string,
   ): Promise<ApiResult<T>> {
     const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), 15000);
+    const timer = setTimeout(
+      () => abort.abort(),
+      path.endsWith('/payments') ? 25000 : 15000,
+    );
     try {
       const headers: Record<string, string> = {};
       if (body !== undefined) {
@@ -168,6 +206,18 @@ export function createHttpApi(
     availableStock: value.availableStock,
   });
   const quote = (value: Quote): Quote => ({
+    ...(value.items
+      ? {
+          items: value.items.map(
+            ({ productId, quantity, unitPriceMinor, productAmountMinor }) => ({
+              productId,
+              quantity,
+              unitPriceMinor,
+              productAmountMinor,
+            }),
+          ),
+        }
+      : {}),
     productId: value.productId,
     quantity: value.quantity,
     currency: value.currency,
@@ -186,6 +236,59 @@ export function createHttpApi(
     reservationExpiresAt: value.reservationExpiresAt,
   });
   return {
+    cardConfiguration: () =>
+      send('/payments/card-configuration', (value) => {
+        if (
+          !record(value) ||
+          ![
+            'apiUrl',
+            'publicKey',
+            'encryptionKey',
+            'privacyUrl',
+            'personalDataUrl',
+            'acceptanceToken',
+            'personalDataToken',
+          ].every((k) => typeof value[k] === 'string' && value[k].length > 0)
+        )
+          return null;
+        return {
+          apiUrl: value.apiUrl,
+          publicKey: value.publicKey,
+          encryptionKey: value.encryptionKey,
+          privacyUrl: value.privacyUrl,
+          personalDataUrl: value.personalDataUrl,
+          acceptanceToken: value.acceptanceToken,
+          personalDataToken: value.personalDataToken,
+        } as import('../domain/card').CardConfiguration;
+      }),
+    chargePayment: (id, input) =>
+      send(
+        `/transactions/${encodeURIComponent(id)}/payments`,
+        (value) =>
+          record(value) && value.accepted === true ? { accepted: true } : null,
+        {
+          token: input.token,
+          acceptanceToken: input.acceptanceToken,
+          personalDataToken: input.personalDataToken,
+          installments: input.installments,
+          privacyAccepted: input.privacyAccepted,
+          personalDataAccepted: input.personalDataAccepted,
+        },
+      ),
+    verifyPayment: (transactionId, providerPaymentId) =>
+      send(
+        `/transactions/${encodeURIComponent(transactionId)}/payment-verification`,
+        (value) =>
+          record(value) && typeof value.verified === 'boolean'
+            ? {
+                verified: value.verified,
+                ...(typeof value.submitted === 'boolean'
+                  ? { submitted: value.submitted }
+                  : {}),
+              }
+            : null,
+        providerPaymentId ? { providerPaymentId } : {},
+      ),
     listProducts: () =>
       send('/products', (value) =>
         Array.isArray(value) && value.every(isProduct)
@@ -216,6 +319,14 @@ export function createHttpApi(
         '/checkout/quote',
         (value) => (isQuote(value) ? quote(value) : null),
         {
+          ...(input.items
+            ? {
+                items: input.items.map(({ productId, quantity }) => ({
+                  productId,
+                  quantity,
+                })),
+              }
+            : {}),
           productId: input.productId,
           quantity: input.quantity,
           deliveryId: input.deliveryId,
@@ -226,6 +337,14 @@ export function createHttpApi(
         '/transactions',
         (value) => (isTransaction(value) ? transaction(value) : null),
         {
+          ...(input.items
+            ? {
+                items: input.items.map(({ productId, quantity }) => ({
+                  productId,
+                  quantity,
+                })),
+              }
+            : {}),
           productId: input.productId,
           quantity: input.quantity,
           deliveryId: input.deliveryId,

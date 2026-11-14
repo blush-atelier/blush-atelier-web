@@ -19,10 +19,26 @@ import { ErrorNotice, Loading } from '../components/Feedback';
 export function CartPage() {
   const dispatch = useAppDispatch();
   const checkout = useAppSelector((state) => state.checkout);
-  const product = useAppSelector((state) =>
-    state.detail?.id === state.checkout.productId
-      ? state.detail
-      : state.products.find((value) => value.id === state.checkout.productId),
+  const products = useAppSelector((state) => state.products);
+  const detail = useAppSelector((state) => state.detail);
+  const entries = checkout.items.map((item) => ({
+    item,
+    product:
+      detail?.id === item.productId
+        ? detail
+        : products.find((p) => p.id === item.productId),
+  }));
+  const ready = entries.every((e) => e.product);
+  const subtotal = entries
+    .reduce(
+      (sum, e) =>
+        sum +
+        BigInt(e.product ? cartSubtotalMinor(e.product, e.item.quantity) : '0'),
+      0n,
+    )
+    .toString();
+  const unavailable = entries.some(
+    (e) => !e.product || e.item.quantity > e.product.availableStock,
   );
   const status = useAppSelector((state) => state.detailStatus);
   const error = useAppSelector((state) => state.detailError);
@@ -36,8 +52,8 @@ export function CartPage() {
   const locked = Boolean(
     checkout.transactionId || checkout.attempted || checkout.phase !== 'idle',
   );
-  function change(quantity: number) {
-    const result = dispatch(updateCartQuantity(quantity));
+  function change(quantity: number, productId: string) {
+    const result = dispatch(updateCartQuantity(quantity, productId));
     setNotice(
       result.ok
         ? ''
@@ -62,7 +78,6 @@ export function CartPage() {
   return (
     <section className="section-wrap cart-page">
       <div className="cart-heading">
-        <p className="eyebrow">01 / TU CARRITO</p>
         <h1 tabIndex={-1}>Tu próximo ritual.</h1>
         <p>Revisa tu elección antes de contarnos a dónde llegará.</p>
       </div>
@@ -70,7 +85,7 @@ export function CartPage() {
         error={error}
         retry={() => void dispatch(loadProduct(checkout.productId!))}
       />
-      {!product ? (
+      {!ready ? (
         <Loading
           label={
             status === 'error'
@@ -81,64 +96,83 @@ export function CartPage() {
       ) : (
         <div className="cart-layout">
           <div className="cart-items">
-            <article className="cart-item">
-              <Link
-                to={`/producto/${product.id}`}
-                aria-label={`Ver ${product.name}`}
-              >
-                <ProductArt product={product} priority />
-              </Link>
-              <div className="cart-item-copy">
-                <p className="eyebrow">{brandOf(product)}</p>
-                <h2>{product.name}</h2>
-                <p>{product.description}</p>
-                <strong>
-                  {formatMoney(product.priceMinor)} <small>COP / unidad</small>
-                </strong>
-                <div className="cart-item-controls">
-                  <div
-                    className="quantity-control"
-                    role="group"
-                    aria-label="Cantidad en el carrito"
+            {entries.map(
+              ({ item, product }, index) =>
+                product && (
+                  <article
+                    className="cart-item"
+                    key={item.productId}
+                    aria-label={product.name}
                   >
-                    <button
-                      aria-label="Reducir unidades del carrito"
-                      disabled={locked || checkout.quantity <= 1}
-                      onClick={() => change(checkout.quantity - 1)}
+                    <Link
+                      to={`/producto/${product.id}`}
+                      aria-label={`Ver ${product.name}`}
                     >
-                      <Icon name="minus" />
-                    </button>
-                    <output aria-label="Unidades en el carrito">
-                      {checkout.quantity}
-                    </output>
-                    <button
-                      aria-label="Aumentar unidades del carrito"
-                      disabled={
-                        locked || checkout.quantity >= product.availableStock
-                      }
-                      onClick={() => change(checkout.quantity + 1)}
-                    >
-                      <Icon name="plus" />
-                    </button>
-                  </div>
-                  <button
-                    className="text-button"
-                    disabled={locked}
-                    onClick={() => dispatch(removeFromCart())}
-                  >
-                    Eliminar producto
-                  </button>
-                </div>
-                <p className="stock-line">
-                  {checkout.quantity > product.availableStock && !locked
-                    ? 'La cantidad elegida supera la disponibilidad actual. Reduce las unidades para continuar.'
-                    : `${product.availableStock} unidades disponibles`}
-                </p>
-              </div>
-            </article>
+                      <ProductArt product={product} priority={index === 0} />
+                    </Link>
+                    <div className="cart-item-copy">
+                      <p className="eyebrow">{brandOf(product)}</p>
+                      <h2>{product.name}</h2>
+                      <p>{product.description}</p>
+                      <strong>
+                        {formatMoney(product.priceMinor)}{' '}
+                        <small>COP / unidad</small>
+                      </strong>
+                      <div className="cart-item-controls">
+                        <div
+                          className="quantity-control"
+                          role="group"
+                          aria-label="Cantidad en el carrito"
+                        >
+                          <button
+                            aria-label="Reducir unidades del carrito"
+                            disabled={locked || item.quantity <= 1}
+                            onClick={() =>
+                              change(item.quantity - 1, item.productId)
+                            }
+                          >
+                            <Icon name="minus" />
+                          </button>
+                          <output
+                            key={item.quantity}
+                            aria-label="Unidades en el carrito"
+                          >
+                            {item.quantity}
+                          </output>
+                          <button
+                            aria-label="Aumentar unidades del carrito"
+                            disabled={
+                              locked || item.quantity >= product.availableStock
+                            }
+                            onClick={() =>
+                              change(item.quantity + 1, item.productId)
+                            }
+                          >
+                            <Icon name="plus" />
+                          </button>
+                        </div>
+                        <button
+                          className="text-button"
+                          disabled={locked}
+                          onClick={() =>
+                            dispatch(removeFromCart(item.productId))
+                          }
+                        >
+                          Eliminar producto
+                        </button>
+                      </div>
+                      <p className="stock-line">
+                        {item.quantity > product.availableStock && !locked
+                          ? 'La cantidad elegida supera la disponibilidad actual. Reduce las unidades para continuar.'
+                          : `${product.availableStock} unidades disponibles`}
+                      </p>
+                    </div>
+                  </article>
+                ),
+            )}
             <p className="cart-hint">
-              Una referencia por compra, tantas unidades como tu ritual
-              necesite.
+              Combina tus favoritos. Puedes ajustar cada producto antes de
+              continuar.
             </p>
             <Link className="text-button" to="/">
               <Icon name="back" />
@@ -146,16 +180,16 @@ export function CartPage() {
             </Link>
           </div>
           <aside className="cart-totals">
-            <p className="eyebrow">TU SELECCIÓN, CON CALMA</p>
             <h2>Resumen del carrito</h2>
             <dl>
               <div>
                 <dt>
-                  Productos <span>× {checkout.quantity}</span>
+                  Productos{' '}
+                  <span>
+                    × {checkout.items.reduce((sum, i) => sum + i.quantity, 0)}
+                  </span>
                 </dt>
-                <dd>
-                  {formatMoney(cartSubtotalMinor(product, checkout.quantity))}
-                </dd>
+                <dd>{formatMoney(subtotal)}</dd>
               </div>
             </dl>
             <p>
@@ -177,13 +211,10 @@ export function CartPage() {
             ) : (
               <button
                 className="button button--dark"
-                disabled={
-                  checkout.quantity > product.availableStock ||
-                  !product.availableStock
-                }
+                disabled={unavailable}
                 onClick={() => dispatch(beginCartCheckout())}
               >
-                Continuar con la entrega
+                Pagar con tarjeta de crédito
                 <Icon name="arrow" />
               </button>
             )}

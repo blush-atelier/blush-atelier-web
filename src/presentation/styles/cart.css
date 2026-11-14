@@ -89,7 +89,6 @@
     padding: 25px 22px;
     border: 1px solid var(--line);
     border-radius: 20px;
-    box-shadow: var(--shadow);
   }
   .cart-totals h2 {
     font-size: 28px;
@@ -161,38 +160,6 @@
     width: 29px;
     height: 29px;
   }
-  .replace-dialog {
-    max-height: calc(100dvh - 32px);
-    overflow: auto;
-    width: min(480px, calc(100% - 32px));
-    padding: 28px;
-    border: 0;
-    border-radius: 22px;
-    background: var(--white);
-    color: var(--ink);
-    box-shadow: 0 24px 90px #352e2a30;
-  }
-  .replace-dialog::backdrop {
-    background: #2e211db0;
-  }
-  .replace-dialog > .icon-button {
-    margin-left: auto;
-    margin-bottom: 10px;
-  }
-  .replace-dialog h2 {
-    font-size: 36px;
-    margin: 12px 0 18px;
-  }
-  .replace-dialog > p:not(.eyebrow) {
-    font-size: 14px;
-    color: var(--muted);
-    line-height: 1.8;
-  }
-  .replace-dialog > div {
-    display: grid;
-    gap: 12px;
-    margin-top: 25px;
-  }
 }
 @layer responsive {
   @media (min-width: 600px) {
@@ -240,37 +207,5 @@
     .cart-totals {
       padding: 22px 18px;
     }
-  }
-}
-
-@layer components {
-  .checkout-selection {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: var(--rose-soft);
-    border-radius: 16px;
-    margin-bottom: 24px;
-  }
-  .checkout-selection .product-art {
-    width: 64px;
-    aspect-ratio: 4/5;
-    border-radius: 10px;
-    flex: none;
-  }
-  .checkout-selection strong {
-    font-size: 13px;
-    line-height: 1.5;
-    display: block;
-  }
-  .checkout-selection p {
-    font-size: 11px;
-    color: var(--muted);
-    margin: 6px 0 8px;
-  }
-  .checkout-selection .text-button {
-    font-size: 11px;
-    padding: 8px 10px;
   }
 }

@@ -16,7 +16,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const { pathname, hash } = useLocation();
   const quantity = useAppSelector((state) =>
     state.checkout.productId && !state.checkout.transactionId
-      ? state.checkout.quantity
+      ? state.checkout.items.reduce((sum, i) => sum + i.quantity, 0)
       : 0,
   );
   useEffect(() => {
@@ -70,10 +70,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </Link>
         <NavLink to="/carrito" className="order-link">
           <span>Carrito</span>
-          <Icon name="bag" />
+          <Icon name="bag" key={`bag-${quantity}`} />
           {quantity > 0 && (
             <span
               className="selection-count"
+              key={quantity}
               aria-label={`${quantity} ${quantity === 1 ? 'unidad' : 'unidades'} en el carrito`}
             >
               {quantity}
@@ -113,11 +114,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <span>Colección</span>
         </NavLink>
         <NavLink to="/carrito">
-          <Icon name="bag" />
+          <span className="mobile-cart-icon">
+            <Icon name="bag" key={`bag-${quantity}`} />
+            {quantity > 0 && (
+              <span className="selection-count" aria-hidden="true">
+                {quantity}
+              </span>
+            )}
+          </span>
           <span>Carrito</span>
         </NavLink>
         <NavLink to="/pedido">
-          <Icon name="bag" />
+          <Icon name="receipt" />
           <span>Mi pedido</span>
         </NavLink>
         <Link
@@ -125,9 +133,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           className={hash === '#ayuda' ? 'is-active' : ''}
           aria-current={hash === '#ayuda' ? 'location' : undefined}
         >
-          <span className="help-symbol" aria-hidden="true">
-            ?
-          </span>
+          <Icon name="help" />
           <span>Ayuda</span>
         </Link>
       </nav>

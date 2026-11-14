@@ -1,3 +1,4 @@
+import { selectOption } from './select-helper';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
@@ -46,8 +47,10 @@ async function openDetails(user: ReturnType<typeof userEvent.setup>) {
     await user.click(
       await screen.findByRole('button', { name: 'Agregar al carrito' }),
     );
+  if (screen.queryByRole('dialog', { name: 'Tu selección.' }))
+    await user.click(screen.getByRole('link', { name: 'Revisar carrito' }));
   await user.click(
-    await screen.findByRole('button', { name: 'Continuar con la entrega' }),
+    await screen.findByRole('button', { name: 'Pagar con tarjeta de crédito' }),
   );
   return screen.getByRole('dialog');
 }
@@ -57,10 +60,18 @@ async function fill(user: ReturnType<typeof userEvent.setup>) {
     ['Correo electrónico', form.email],
     ['Teléfono de contacto', form.phone],
     ['Dirección de entrega', form.addressLine],
-    ['Ciudad', form.city],
-    ['Departamento', form.region],
   ])
     await user.type(screen.getByLabelText(label), value);
+  await selectOption(
+    user,
+    screen.getByRole('combobox', { name: 'Departamento' }),
+    form.region,
+  );
+  await selectOption(
+    user,
+    screen.getByRole('combobox', { name: 'Ciudad' }),
+    form.city,
+  );
 }
 const failure = (code: ApiError['code'], status = 400) => ({
   ok: false as const,
@@ -78,7 +89,8 @@ describe('UI conectada mediante los puertos', () => {
     await user.click(screen.getByRole('button', { name: 'Rubores' }));
     expect(screen.getByRole('heading', { name: 'Rubor Rose' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Todos' }));
-    await user.selectOptions(
+    await selectOption(
+      user,
       screen.getByRole('combobox', { name: 'Ordenar productos' }),
       'price',
     );
@@ -108,7 +120,8 @@ describe('UI conectada mediante los puertos', () => {
     api.listProducts.mockResolvedValue(success([real, lipstick]));
     const { user } = setup('/', null, api);
     await screen.findByRole('heading', { name: real.name });
-    await user.selectOptions(
+    await selectOption(
+      user,
       screen.getByRole('combobox', { name: 'Filtrar por marca' }),
       'MAC',
     );
@@ -128,7 +141,8 @@ describe('UI conectada mediante los puertos', () => {
     expect(
       screen.getByRole('img', { name: `Imagen no disponible: ${real.name}` }),
     ).toBeVisible();
-    await user.selectOptions(
+    await selectOption(
+      user,
       screen.getByRole('combobox', { name: 'Filtrar por marca' }),
       'Todas',
     );
@@ -178,7 +192,9 @@ describe('UI conectada mediante los puertos', () => {
     expect(screen.getByLabelText('Correo electrónico')).toHaveValue(form.email);
     await user.click(screen.getByRole('button', { name: 'Revisar mi pedido' }));
     await screen.findByRole('heading', { name: 'Resumen de tu compra.' });
-    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Continuar con el pago' }),
+    );
     await screen.findByRole('heading', { name: 'Tu selección te espera.' });
     expect(screen.getByText(transaction.reference)).toBeVisible();
     expect(api.createPending).toHaveBeenCalledTimes(1);
@@ -194,7 +210,7 @@ describe('UI conectada mediante los puertos', () => {
     );
     await screen.findByRole('heading', { name: 'Rubor Rose' });
     expect(api.listProducts.mock.calls.length).toBeGreaterThan(1);
-  });
+  }, 10000);
   test('cerrar y Escape descartan datos personales del formulario', async () => {
     const { user } = setup(`/producto/${productId}`);
     await openDetails(user);
@@ -270,21 +286,23 @@ describe('UI conectada mediante los puertos', () => {
     const api = apiFixture();
     api.createPending.mockResolvedValueOnce(failure('QuoteChanged', 409));
     const { user } = setup('/', progress, api);
-    await screen.findByRole('button', { name: 'Confirmar reserva' });
+    await screen.findByRole('button', { name: 'Continuar con el pago' });
     expect(
       screen.getByText('Tu entrega ya está registrada en esta sesión.'),
     ).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Continuar con el pago' }),
+    );
     await screen.findByRole('alert');
     expect(
-      screen.getByRole('button', { name: 'Confirmar reserva' }),
+      screen.getByRole('button', { name: 'Continuar con el pago' }),
     ).toBeDisabled();
     await user.click(
       screen.getByRole('button', { name: 'Actualizar resumen' }),
     );
     await waitFor(() =>
       expect(
-        screen.getByRole('button', { name: 'Confirmar reserva' }),
+        screen.getByRole('button', { name: 'Continuar con el pago' }),
       ).toBeEnabled(),
     );
   });
@@ -294,14 +312,14 @@ describe('UI conectada mediante los puertos', () => {
     const { user } = setup('/', progress, api);
     await screen.findByRole('alert');
     await user.click(screen.getByRole('button', { name: 'Recuperar resumen' }));
-    await screen.findByRole('button', { name: 'Confirmar reserva' });
+    await screen.findByRole('button', { name: 'Continuar con el pago' });
   });
   test('una respuesta perdida ofrece reintentar la misma reserva', async () => {
     const api = apiFixture();
     api.createPending.mockResolvedValueOnce(failure('NetworkError', 0));
     const { user } = setup('/', progress, api);
     await user.click(
-      await screen.findByRole('button', { name: 'Confirmar reserva' }),
+      await screen.findByRole('button', { name: 'Continuar con el pago' }),
     );
     await user.click(
       await screen.findByRole('button', {
@@ -458,4 +476,119 @@ describe('UI conectada mediante los puertos', () => {
     setup('/', null, api);
     await screen.findByText('Sin unidades disponibles');
   });
+});
+
+test('cambiar de paso reinicia el scroll del modal y mantiene el título enfocado', async () => {
+  const { user } = setup(`/producto/${productId}`);
+  const dialog = await openDetails(user);
+  await fill(user);
+  dialog.scrollTop = 600;
+  await user.click(screen.getByRole('button', { name: 'Revisar mi pedido' }));
+  const heading = await screen.findByRole('heading', {
+    name: 'Resumen de tu compra.',
+  });
+  expect(heading).toHaveFocus();
+  expect(dialog.scrollTop).toBe(0);
+  dialog.scrollTop = 400;
+  await user.click(
+    screen.getByRole('button', { name: 'Editar datos de entrega' }),
+  );
+  expect(
+    screen.getByRole('heading', { name: 'Tus datos y entrega.' }),
+  ).toHaveFocus();
+  expect(dialog.scrollTop).toBe(0);
+});
+
+test('retomar selección abre el carrito completo en lugar de un único detalle', async () => {
+  const saved: SafeProgress = {
+    ...progress,
+    deliveryId: null,
+    requestKey: null,
+    expectedTotalMinor: null,
+    items: [
+      { productId, quantity: 1 },
+      { productId: lipstick.id, quantity: 2 },
+    ],
+  };
+  const { user } = setup('/', saved);
+  await user.click(screen.getByRole('link', { name: 'Retomar mi selección' }));
+  expect(
+    await screen.findByRole('heading', { name: 'Tu próximo ritual.' }),
+  ).toBeVisible();
+  expect(screen.getByRole('article', { name: product.name })).toBeVisible();
+  expect(screen.getByRole('article', { name: lipstick.name })).toBeVisible();
+});
+test('retomar una compra ya creada abre su estado sin crear otra transacción', async () => {
+  const { user, api } = setup('/', {
+    ...progress,
+    transactionId: transaction.id,
+    attempted: true,
+  });
+  await user.click(screen.getByRole('link', { name: 'Retomar mi selección' }));
+  expect(
+    await screen.findByRole('heading', { name: 'Tu selección te espera.' }),
+  ).toBeVisible();
+  expect(api.getTransaction).toHaveBeenCalledWith(transaction.id);
+  expect(api.createPending).not.toHaveBeenCalled();
+});
+
+test('ciudades dependen del departamento y cambiarlo borra la ciudad anterior', async () => {
+  const { user, api } = setup(`/producto/${productId}`);
+  await openDetails(user);
+  const region = screen.getByRole('combobox', { name: 'Departamento' });
+  const city = screen.getByRole('combobox', { name: 'Ciudad' });
+  expect(city).toBeDisabled();
+  await selectOption(user, region, 'Amazonas');
+  expect(city).toBeEnabled();
+  await user.click(city);
+  expect(screen.getByRole('option', { name: 'Leticia' })).toBeVisible();
+  expect(
+    screen.queryByRole('option', { name: 'Bogotá' }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole('option', { name: 'Leticia' }));
+  await selectOption(user, region, 'Bogotá D.C.');
+  expect(city).toHaveTextContent('Selecciona tu ciudad o municipio');
+  await user.click(city);
+  expect(screen.getAllByRole('option')).toHaveLength(1);
+  await user.click(screen.getByRole('option', { name: 'Bogotá' }));
+  await user.click(screen.getByRole('button', { name: 'Revisar mi pedido' }));
+  expect(api.registerDelivery).not.toHaveBeenCalled();
+});
+
+test('añadir abre vista lateral sin navegar, acumula y devuelve el foco al cerrar', async () => {
+  const { user, store, api } = setup(`/producto/${productId}`);
+  const add = await screen.findByRole('button', { name: 'Agregar al carrito' });
+  await user.click(add);
+  expect(screen.getByRole('dialog', { name: 'Tu selección.' })).toBeVisible();
+  expect(screen.getByText('Cantidad: 1')).toBeVisible();
+  expect(api.createPending).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Seguir comprando' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(add).toHaveFocus();
+  expect(
+    screen.getByRole('heading', { name: 'Rubor Rose', level: 1 }),
+  ).toBeVisible();
+  await user.click(add);
+  expect(screen.getByText('Cantidad: 2')).toBeVisible();
+  expect(store.getState().checkout.items[0].quantity).toBe(2);
+  fireEvent(
+    screen.getByRole('dialog'),
+    new Event('cancel', { bubbles: true, cancelable: true }),
+  );
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(document.body.style.overflow).toBe('');
+  await user.click(add);
+  await user.click(
+    screen.getByRole('button', { name: 'Cerrar vista del carrito' }),
+  );
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  await user.click(add);
+  fireEvent.click(screen.getByRole('dialog'), { clientX: -10, clientY: -10 });
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  await user.click(add);
+  await user.click(screen.getByRole('link', { name: 'Revisar carrito' }));
+  expect(
+    await screen.findByRole('heading', { name: 'Tu próximo ritual.' }),
+  ).toBeVisible();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });

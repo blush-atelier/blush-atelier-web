@@ -12,10 +12,26 @@ export function Icon({
     | 'check'
     | 'refresh'
     | 'back'
-    | 'home';
+    | 'home'
+    | 'chevron'
+    | 'receipt'
+    | 'help';
   className?: string;
 }) {
   const paths = {
+    chevron: <path d="m6 9 6 6 6-6" />,
+    receipt: (
+      <>
+        <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+        <path d="M9 8h6M9 12h6" />
+      </>
+    ),
+    help: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .7-1.5 1-1.5 2M12 16h.01" />
+      </>
+    ),
     bag: (
       <>
         <path d="M5 7h14l1 14H4L5 7Z" />

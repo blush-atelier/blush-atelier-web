@@ -16,6 +16,7 @@ import {
   type AppState,
 } from './state';
 export interface Dependencies {
+  card?: import('../domain/card').CardPort;
   api: CheckoutApi;
   progress: ProgressPort;
   runtime: RuntimePort;

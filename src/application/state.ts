@@ -7,7 +7,11 @@ import type {
   Transaction,
 } from '../domain/contracts';
 export interface CheckoutState {
+  paymentInProgress: boolean;
+  paymentSubmitted: boolean;
+  providerPaymentId: string | null;
   productId: string | null;
+  items: { productId: string; quantity: number }[];
   quantity: number;
   deliveryId: string | null;
   transactionId: string | null;
@@ -15,7 +19,7 @@ export interface CheckoutState {
   expectedTotalMinor: string | null;
   attempted: boolean;
   step: 'closed' | 'details' | 'review' | 'result';
-  phase: 'idle' | 'preparing' | 'reserving' | 'resuming';
+  phase: 'idle' | 'preparing' | 'reserving' | 'resuming' | 'paying';
   quote: Quote | null;
   transaction: Transaction | null;
   error: ApiError | null;
@@ -33,7 +37,11 @@ export interface AppState {
 }
 export function emptyCheckout(): CheckoutState {
   return {
+    paymentInProgress: false,
+    paymentSubmitted: false,
+    providerPaymentId: null,
     productId: null,
+    items: [],
     quantity: 1,
     deliveryId: null,
     transactionId: null,
@@ -51,6 +59,9 @@ export function initialState(progress: SafeProgress | null = null): AppState {
   const checkout = emptyCheckout();
   if (progress)
     Object.assign(checkout, progress, {
+      items: progress.items ?? [
+        { productId: progress.productId, quantity: progress.quantity },
+      ],
       step: progress.transactionId
         ? 'result'
         : progress.deliveryId
@@ -113,14 +124,28 @@ const slice = createSlice({
       state.checkout = {
         ...emptyCheckout(),
         ...action.payload,
+        items: [action.payload],
         step: 'details',
       };
     },
     cartStored(
       state,
-      action: PayloadAction<{ productId: string; quantity: number }>,
+      action: PayloadAction<{
+        productId: string;
+        quantity: number;
+        items?: { productId: string; quantity: number }[];
+      }>,
     ) {
-      state.checkout = { ...emptyCheckout(), ...action.payload };
+      state.checkout = {
+        ...emptyCheckout(),
+        ...action.payload,
+        items: action.payload.items ?? [
+          {
+            productId: action.payload.productId,
+            quantity: action.payload.quantity,
+          },
+        ],
+      };
     },
     cartDetailsRequested(state) {
       if (
@@ -160,7 +185,32 @@ const slice = createSlice({
       state.checkout.attempted = true;
       state.checkout.error = null;
     },
+    cardDetailsRequested(state) {
+      state.checkout.step = 'details';
+      state.checkout.phase = 'idle';
+      state.checkout.error = null;
+      state.checkout.paymentInProgress = false;
+    },
+    cardReviewRequested(state) {
+      state.checkout.step = 'review';
+      state.checkout.quote = state.checkout.transaction;
+    },
+    paymentUiStarted(state) {
+      state.checkout.paymentInProgress = true;
+    },
+    paymentUiClosed(state) {
+      state.checkout.paymentInProgress = false;
+    },
+    paymentSubmissionStarted(state) {
+      state.checkout.paymentSubmitted = true;
+    },
+    paymentIdentified(state, action: PayloadAction<string>) {
+      if (state.checkout.transactionId)
+        state.checkout.providerPaymentId = action.payload;
+    },
     transactionReady(state, action: PayloadAction<Transaction>) {
+      if (action.payload.status !== 'PENDING')
+        state.checkout.paymentInProgress = false;
       Object.assign(state.checkout, {
         transaction: action.payload,
         transactionId: action.payload.id,
@@ -200,6 +250,17 @@ export function safeProgress(state: AppState): SafeProgress | null {
   if (!value.productId) return null;
   return {
     version: 1,
+    ...(value.providerPaymentId
+      ? { providerPaymentId: value.providerPaymentId }
+      : {}),
+    ...(value.items.length > 1
+      ? {
+          items: value.items.map(({ productId, quantity }) => ({
+            productId,
+            quantity,
+          })),
+        }
+      : {}),
     productId: value.productId,
     quantity: value.quantity,
     deliveryId: value.deliveryId,

@@ -1,6 +1,12 @@
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  act,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SummaryBackdrop } from '../src/presentation/components/SummaryBackdrop';
 import { App } from '../src/presentation/App';
@@ -11,6 +17,9 @@ import {
   updateCartQuantity,
   removeFromCart,
   beginCartCheckout,
+  prepareCheckout,
+  reserveCheckout,
+  resumeCheckout,
 } from '../src/application/operations';
 import { cartSubtotalMinor } from '../src/domain/presentation';
 import {
@@ -23,6 +32,9 @@ import {
   progress,
   transaction,
   success,
+  quote,
+  form,
+  deliveryId,
 } from './fixtures';
 function fixture() {
   const api = apiFixture();
@@ -57,14 +69,13 @@ test('agrega, acumula y cambia cantidades sin registrar cliente, entrega ni rese
   expect(f.store.dispatch(addToCart(productId, 2)).ok).toBe(true);
   expect(f.persistence.current?.quantity).toBe(3);
   expect(f.store.getState().checkout.step).toBe('closed');
-  expect(f.store.dispatch(addToCart(otherId, 1))).toEqual({
-    ok: false,
-    error: 'DifferentProduct',
-  });
-  expect(f.store.getState().checkout.productId).toBe(productId);
-  expect(f.store.dispatch(addToCart(otherId, 1, true)).ok).toBe(true);
-  expect(f.store.dispatch(updateCartQuantity(2)).ok).toBe(true);
-  expect(f.store.getState().checkout.quantity).toBe(2);
+  expect(f.store.dispatch(addToCart(otherId, 1)).ok).toBe(true);
+  expect(f.store.getState().checkout.items).toEqual([
+    { productId, quantity: 3 },
+    { productId: otherId, quantity: 1 },
+  ]);
+  expect(f.store.dispatch(updateCartQuantity(2, otherId)).ok).toBe(true);
+  expect(f.store.getState().checkout.items[1].quantity).toBe(2);
   expect(f.api.registerCustomer).not.toHaveBeenCalled();
   expect(f.api.createPending).not.toHaveBeenCalled();
   expect(f.api.quote).not.toHaveBeenCalled();
@@ -156,7 +167,7 @@ test('carrito vacío, revisión de contenido y entrega posterior, con persistenc
     screen.getByRole('button', { name: 'Reducir unidades del carrito' }),
   );
   await user.click(
-    screen.getByRole('button', { name: 'Continuar con la entrega' }),
+    screen.getByRole('button', { name: 'Pagar con tarjeta de crédito' }),
   );
   expect(screen.getByLabelText('Nombre y apellido')).toBeVisible();
   fireEvent(
@@ -168,7 +179,7 @@ test('carrito vacío, revisión de contenido y entrega posterior, con persistenc
     screen.getByRole('heading', { name: 'Todo empieza con un esencial.' }),
   ).toBeVisible();
 });
-test('cambiar de producto exige confirmación y permite conservar la elección', async () => {
+test('agregar otro producto conserva ambos y permite editar y retirar cada línea', async () => {
   const f = fixture();
   f.store.dispatch(addToCart(productId, 1));
   f.api.getProduct.mockResolvedValue(success(lipstick));
@@ -176,16 +187,24 @@ test('cambiar de producto exige confirmación y permite conservar la elección',
   await user.click(
     await screen.findByRole('button', { name: 'Agregar al carrito' }),
   );
-  expect(
-    screen.getByRole('heading', { name: '¿Cambiamos tu esencial?' }),
-  ).toHaveFocus();
-  await user.click(
-    screen.getByRole('button', { name: 'Conservar mi carrito' }),
-  );
-  expect(f.store.getState().checkout.productId).toBe(productId);
-  await user.click(screen.getByRole('button', { name: 'Agregar al carrito' }));
-  await user.click(screen.getByRole('button', { name: 'Reemplazar producto' }));
+  await user.click(screen.getByRole('link', { name: 'Revisar carrito' }));
   await screen.findByRole('heading', { name: 'Tu próximo ritual.' });
+  expect(screen.getByRole('article', { name: product.name })).toBeVisible();
+  expect(screen.getByRole('article', { name: lipstick.name })).toBeVisible();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  await user.click(
+    screen.getAllByRole('button', { name: 'Aumentar unidades del carrito' })[1],
+  );
+  expect(f.store.getState().checkout.items).toEqual([
+    { productId, quantity: 1 },
+    { productId: otherId, quantity: 2 },
+  ]);
+  await user.click(
+    screen.getAllByRole('button', { name: 'Eliminar producto' })[0],
+  );
+  expect(f.store.getState().checkout.items).toEqual([
+    { productId: otherId, quantity: 2 },
+  ]);
   expect(f.store.getState().checkout.productId).toBe(otherId);
 });
 test('si cambió el stock se muestra el aviso y bloquea continuar; permite corregir', async () => {
@@ -200,7 +219,7 @@ test('si cambió el stock se muestra el aviso y bloquea continuar; permite corre
   const { user } = setup('/carrito', f);
   await waitFor(() =>
     expect(
-      screen.getByRole('button', { name: 'Continuar con la entrega' }),
+      screen.getByRole('button', { name: 'Pagar con tarjeta de crédito' }),
     ).toBeDisabled(),
   );
   expect(f.store.dispatch(beginCartCheckout())).toBe(false);
@@ -211,7 +230,7 @@ test('si cambió el stock se muestra el aviso y bloquea continuar; permite corre
     screen.getByRole('button', { name: 'Reducir unidades del carrito' }),
   );
   expect(
-    screen.getByRole('button', { name: 'Continuar con la entrega' }),
+    screen.getByRole('button', { name: 'Pagar con tarjeta de crédito' }),
   ).toBeEnabled();
 });
 test('la solicitud pendiente queda protegida incluso al abrir el carrito directamente', async () => {
@@ -266,10 +285,77 @@ test('el carrito se rehidrata solo con referencias y volver desde entrega no res
   );
   expect(screen.queryByLabelText('Correo electrónico')).not.toBeInTheDocument();
   await user.click(
-    screen.getByRole('button', { name: 'Continuar con la entrega' }),
+    screen.getByRole('button', { name: 'Pagar con tarjeta de crédito' }),
   );
   await user.click(screen.getByRole('button', { name: 'Revisar carrito' }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(restored.getState().checkout.quantity).toBe(2);
   expect(f.api.createPending).not.toHaveBeenCalled();
+});
+
+test('cotiza todos los productos, muestra el desglose y reintenta la misma reserva tras refrescar', async () => {
+  const f = fixture();
+  f.store.dispatch(addToCart(productId, 1));
+  f.store.dispatch(addToCart(otherId, 2));
+  const items = [
+    {
+      productId,
+      quantity: 1,
+      unitPriceMinor: '8990000',
+      productAmountMinor: '8990000',
+    },
+    {
+      productId: otherId,
+      quantity: 2,
+      unitPriceMinor: '5990000',
+      productAmountMinor: '11980000',
+    },
+  ];
+  const basket = {
+    ...quote,
+    items,
+    productAmountMinor: '20970000',
+    totalMinor: '22470000',
+  };
+  f.api.quote.mockResolvedValue(success(basket));
+  expect(await f.store.dispatch(prepareCheckout(form))).toBe(true);
+  expect(f.api.quote).toHaveBeenCalledWith({
+    productId,
+    quantity: 1,
+    deliveryId,
+    items: items.map(({ productId, quantity }) => ({ productId, quantity })),
+  });
+  const { user, unmount } = setup('/carrito', f);
+  await user.click(screen.getByRole('button', { name: 'Ver mis productos' }));
+  expect(
+    screen.getByRole('heading', { name: product.name, level: 3 }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole('heading', { name: lipstick.name, level: 3 }),
+  ).toBeInTheDocument();
+  expect(screen.getByText('$ 224.700')).toBeVisible();
+  f.api.createPending.mockResolvedValueOnce({
+    ok: false,
+    error: { code: 'NetworkError', status: 0 },
+  });
+  await act(async () => {
+    await f.store.dispatch(reserveCheckout());
+  });
+  const original = f.api.createPending.mock.calls[0];
+  expect(f.store.dispatch(removeFromCart(otherId))).toBe(false);
+  expect(f.store.dispatch(addToCart(otherId, 1))).toEqual({
+    ok: false,
+    error: 'CheckoutLocked',
+  });
+  unmount();
+  const restored = createAppStore({
+    api: f.api,
+    progress: f.persistence,
+    runtime: { newKey: () => 'must-not-be-used' },
+  });
+  f.api.createPending.mockResolvedValue(success({ ...transaction, ...basket }));
+  expect(await restored.dispatch(resumeCheckout())).toBe(true);
+  expect(f.api.createPending.mock.calls[1]).toEqual(original);
+  expect(JSON.stringify(f.persistence.current)).not.toContain(form.email);
+  expect(restored.getState().checkout.transaction?.items).toHaveLength(2);
 });

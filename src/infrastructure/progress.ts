@@ -11,6 +11,8 @@ export function parseProgress(value: unknown): SafeProgress | null {
   const data = value as Record<string, unknown>;
   const keys = [
     'version',
+    'providerPaymentId',
+    'items',
     'productId',
     'quantity',
     'deliveryId',
@@ -28,6 +30,35 @@ export function parseProgress(value: unknown): SafeProgress | null {
     data.quantity < 1 ||
     data.quantity > 2147483647 ||
     typeof data.attempted !== 'boolean'
+  )
+    return null;
+  if (
+    data.items !== undefined &&
+    (!Array.isArray(data.items) ||
+      data.items.length < 2 ||
+      data.items.length > 50 ||
+      new Set(data.items.map((i) => i?.productId)).size !== data.items.length ||
+      !data.items.every(
+        (i) =>
+          typeof i === 'object' &&
+          i !== null &&
+          Object.keys(i).length === 2 &&
+          uuid(i.productId) &&
+          Number.isSafeInteger(i.quantity) &&
+          i.quantity > 0 &&
+          i.quantity <= 2147483647,
+      ) ||
+      data.items[0].productId !== data.productId ||
+      data.items[0].quantity !== data.quantity)
+  )
+    return null;
+  if (
+    data.providerPaymentId !== undefined &&
+    (typeof data.providerPaymentId !== 'string' ||
+      !/^(?=.{1,128}$)[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)+$/.test(
+        data.providerPaymentId,
+      ) ||
+      !uuid(data.transactionId))
   )
     return null;
   if (data.deliveryId !== null && !uuid(data.deliveryId)) return null;
@@ -51,6 +82,17 @@ export function parseProgress(value: unknown): SafeProgress | null {
     return null;
   return {
     version: 1,
+    ...(typeof data.providerPaymentId === 'string'
+      ? { providerPaymentId: data.providerPaymentId }
+      : {}),
+    ...(Array.isArray(data.items)
+      ? {
+          items: data.items.map((i) => ({
+            productId: i.productId as string,
+            quantity: i.quantity as number,
+          })),
+        }
+      : {}),
     productId: data.productId as string,
     quantity: data.quantity,
     deliveryId: data.deliveryId as string | null,

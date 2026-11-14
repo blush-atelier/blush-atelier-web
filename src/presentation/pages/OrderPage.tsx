@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { TransactionStatus } from '../../domain/contracts';
-import { resumeCheckout } from '../../application/operations';
+import {
+  resumeCheckout,
+  refreshPayment,
+  startPayment,
+  cardEnabled,
+} from '../../application/operations';
 import { actions } from '../../application/state';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { OrderSummary } from '../components/OrderSummary';
@@ -16,7 +21,7 @@ const statuses: Record<
     label: 'RESERVA ACTIVA · PAGO PENDIENTE',
     title: 'Tu selección te espera.',
     description:
-      'Guardamos tu próximo esencial por un momento. Esta reserva no es un pago y no se ha realizado ningún cobro.',
+      'Guardamos tu próximo esencial por un momento. El pago todavía no está confirmado. Consulta su estado antes de abrir otro intento.',
   },
   EXPIRED: {
     label: 'RESERVA FINALIZADA',
@@ -48,12 +53,16 @@ export function OrderPage() {
   const navigate = useNavigate();
   const checkout = useAppSelector((state) => state.checkout);
   const products = useAppSelector((state) => state.products);
+  const [cardMode, setCardMode] = useState(false);
+  useEffect(() => {
+    setCardMode(dispatch(cardEnabled()));
+  }, [dispatch]);
   const [copied, setCopied] = useState('');
   const transaction =
     checkout.error?.code === 'SessionRequired' ? null : checkout.transaction;
   useEffect(() => {
     if (!checkout.transactionId && !checkout.attempted) return;
-    void dispatch(resumeCheckout());
+    void dispatch(checkout.transactionId ? refreshPayment() : resumeCheckout());
     if (
       checkout.transaction?.status &&
       checkout.transaction.status !== 'PENDING'
@@ -61,7 +70,7 @@ export function OrderPage() {
       return;
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible')
-        void dispatch(resumeCheckout());
+        void dispatch(refreshPayment());
     }, 20000);
     return () => clearInterval(timer);
   }, [
@@ -93,7 +102,7 @@ export function OrderPage() {
           </p>
         </div>
         <ErrorNotice
-          error={checkout.error}
+          error={cardMode ? null : checkout.error}
           retry={() => void dispatch(resumeCheckout())}
         />
         {checkout.phase !== 'idle' ? (
@@ -130,7 +139,9 @@ export function OrderPage() {
       </section>
     );
   const content = statuses[transaction.status];
-  const product = products.find((value) => value.id === transaction.productId);
+  const items = transaction.items ?? [
+    { productId: transaction.productId, quantity: transaction.quantity },
+  ];
   const until = new Intl.DateTimeFormat('es-CO', {
     hour: '2-digit',
     minute: '2-digit',
@@ -150,11 +161,15 @@ export function OrderPage() {
     <section className="section-wrap order-page">
       <div className="order-intro">
         <p className="eyebrow">{content.label}</p>
-        <h1 tabIndex={-1}>{content.title}</h1>
+        <h1 tabIndex={-1}>
+          {checkout.paymentSubmitted && transaction.status === 'PENDING'
+            ? 'Completando pago'
+            : content.title}
+        </h1>
         <p>{content.description}</p>
       </div>
       <ErrorNotice
-        error={checkout.error}
+        error={cardMode ? null : checkout.error}
         retry={() => void dispatch(resumeCheckout())}
       />
       <div className="order-layout">
@@ -232,7 +247,7 @@ export function OrderPage() {
                 </h2>
                 <p>
                   {transaction.status === 'PENDING'
-                    ? 'El pago con tarjeta todavía no está habilitado en esta versión.'
+                    ? 'Consulta el estado de tu pago. Confirmamos el resultado directamente con Wompi para evitar intentos duplicados.'
                     : 'Consulta aquí las actualizaciones de tu pedido.'}
                 </p>
               </div>
@@ -240,16 +255,39 @@ export function OrderPage() {
             <li>
               <span className="timeline-dot">04</span>
               <div>
-                <h2>Entrega por confirmar</h2>
-                <p>La reserva no implica que el pedido se haya despachado.</p>
+                <h2>
+                  {transaction.status === 'APPROVED'
+                    ? 'Entrega preparada'
+                    : 'Entrega por confirmar'}
+                </h2>
+                <p>
+                  {transaction.status === 'APPROVED'
+                    ? 'Tu pedido está asignado a la dirección de entrega registrada.'
+                    : 'La reserva no implica que el pedido se haya despachado.'}
+                </p>
               </div>
             </li>
           </ol>
           <div className="order-buttons">
+            {transaction.status === 'PENDING' && (
+              <button
+                className="button button--dark"
+                disabled={checkout.phase !== 'idle'}
+                onClick={() => void dispatch(startPayment())}
+              >
+                {checkout.phase === 'paying'
+                  ? 'Comprobando pago…'
+                  : checkout.providerPaymentId
+                    ? 'Verificar pago'
+                    : checkout.paymentSubmitted
+                      ? 'Consultar pago'
+                      : 'Pagar con tarjeta de crédito'}
+              </button>
+            )}
             <button
               className="button button--outline"
               disabled={checkout.phase !== 'idle'}
-              onClick={() => void dispatch(resumeCheckout())}
+              onClick={() => void dispatch(refreshPayment())}
             >
               <Icon name="refresh" />
               {checkout.phase !== 'idle'
@@ -263,19 +301,24 @@ export function OrderPage() {
         </div>
         <aside className="order-summary">
           <p className="eyebrow">TU SELECCIÓN</p>
-          {product && (
-            <div className="order-product">
-              <ProductArt product={product} />
-              <div>
-                <h2>{product.name}</h2>
-                <p>Cantidad: {transaction.quantity}</p>
-              </div>
-            </div>
-          )}
+          {items.map((item) => {
+            const product = products.find((p) => p.id === item.productId);
+            return (
+              product && (
+                <div className="order-product" key={item.productId}>
+                  <ProductArt product={product} />
+                  <div>
+                    <h2>{product.name}</h2>
+                    <p>Cantidad: {item.quantity}</p>
+                  </div>
+                </div>
+              )
+            );
+          })}
           <OrderSummary quote={transaction} />
           <p className="safe-note">
-            Importes del pedido registrado. En esta etapa no se solicitan datos
-            de tarjeta.
+            Importes del pedido registrado. La tarjeta se tokeniza directamente
+            con Wompi. No almacenamos su número ni código de seguridad.
           </p>
         </aside>
       </div>

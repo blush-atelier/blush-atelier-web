@@ -4,7 +4,7 @@ import {
   parseProgress,
   PROGRESS_KEY,
 } from '../src/infrastructure/progress';
-import { progress, productId, transactionId } from './fixtures';
+import { progress, productId, transactionId, otherId } from './fixtures';
 beforeEach(() => localStorage.clear());
 it('persiste únicamente referencias seguras y descarta formatos ajenos', () => {
   const port = browserProgress();
@@ -63,4 +63,40 @@ it('un almacenamiento bloqueado devuelve un error controlado', () => {
 it('crea claves con aleatoriedad criptográfica y tamaño válido', () => {
   expect(newRequestKey()).toMatch(/^checkout-[a-f0-9]{32}$/);
   expect(newRequestKey()).not.toBe(newRequestKey());
+});
+
+it('preserva todas las referencias de un carrito y rechaza líneas contaminadas o repetidas', () => {
+  const basket = {
+    ...progress,
+    items: [
+      { productId, quantity: 1 },
+      { productId: otherId, quantity: 2 },
+    ],
+    attempted: true,
+  };
+  const port = browserProgress();
+  expect(port.save(basket).ok).toBe(true);
+  expect(port.read()).toEqual({ ok: true, value: basket });
+  for (const items of [
+    [],
+    [null, null],
+    [
+      { productId, quantity: 1 },
+      { productId, quantity: 1 },
+    ],
+    [
+      { productId, quantity: 1 },
+      { productId: otherId, quantity: 2, cvv: 'PRIVATE' },
+    ],
+    [
+      { productId: otherId, quantity: 1 },
+      { productId, quantity: 1 },
+    ],
+    [
+      { productId, quantity: 1 },
+      { productId: otherId, quantity: 0 },
+    ],
+  ])
+    expect(parseProgress({ ...basket, items })).toBeNull();
+  expect(parseProgress(progress)).toEqual(progress);
 });

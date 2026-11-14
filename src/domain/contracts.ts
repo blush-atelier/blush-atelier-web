@@ -17,7 +17,18 @@ export type ErrorCode =
   | 'InvalidDelivery'
   | 'InvalidCheckout'
   | 'InvalidInput'
-  | 'RateLimited';
+  | 'RateLimited'
+  | 'PaymentNotConfigured'
+  | 'PaymentSessionExpired'
+  | 'PaymentProviderUnavailable'
+  | 'PaymentNotFound'
+  | 'InvalidProviderResponse'
+  | 'InvalidPaymentObservation'
+  | 'PaymentIdentityMismatch'
+  | 'PaymentAmountMismatch'
+  | 'PaymentCurrencyMismatch'
+  | 'InvalidPaymentState'
+  | 'InvalidPaymentInput';
 export interface ApiError {
   code: ErrorCode;
   status: number;
@@ -33,7 +44,12 @@ export interface Product {
   currency: 'COP';
   availableStock: number;
 }
+export interface CartItem {
+  productId: string;
+  quantity: number;
+}
 export interface Quote {
+  items?: (CartItem & { unitPriceMinor: string; productAmountMinor: string })[];
   productId: string;
   quantity: number;
   currency: 'COP';
@@ -71,6 +87,7 @@ export interface CheckoutForm extends CustomerInput {
   region: string;
 }
 export interface QuoteInput {
+  items?: CartItem[];
   productId: string;
   quantity: number;
   deliveryId: string;
@@ -79,6 +96,15 @@ export interface PendingInput extends QuoteInput {
   expectedTotalMinor: string;
 }
 export interface CheckoutApi {
+  cardConfiguration(): Promise<ApiResult<import('./card').CardConfiguration>>;
+  chargePayment(
+    id: string,
+    input: import('./card').CardAuthorization,
+  ): Promise<ApiResult<{ accepted: boolean }>>;
+  verifyPayment(
+    id: string,
+    providerPaymentId?: string,
+  ): Promise<ApiResult<{ verified: boolean; submitted?: boolean }>>;
   listProducts(): Promise<ApiResult<Product[]>>;
   getProduct(id: string): Promise<ApiResult<Product>>;
   registerCustomer(input: CustomerInput): Promise<ApiResult<{ id: string }>>;
@@ -91,7 +117,9 @@ export interface CheckoutApi {
   getTransaction(id: string): Promise<ApiResult<Transaction>>;
 }
 export interface SafeProgress {
+  providerPaymentId?: string;
   version: 1;
+  items?: CartItem[];
   productId: string;
   quantity: number;
   deliveryId: string | null;
@@ -110,7 +138,6 @@ export interface RuntimePort {
 
 export type CartError =
   | 'CheckoutLocked'
-  | 'DifferentProduct'
   | 'InsufficientStock'
   | 'ProductNotFound'
   | 'InvalidQuantity';

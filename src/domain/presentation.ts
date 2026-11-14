@@ -123,6 +123,24 @@ export function validateForm(
 export function errorMessage(error: ApiError | null): string {
   if (!error) return '';
   switch (error.code) {
+    case 'PaymentNotConfigured':
+      return 'El pago Sandbox aún no está configurado en la API. Tu pedido permanece pendiente.';
+    case 'PaymentSessionExpired':
+      return 'La sesión de pago venció. Actualiza el estado; si ya pagaste, espera la confirmación.';
+    case 'PaymentProviderUnavailable':
+      return 'Wompi no respondió. No abras otra compra: actualiza el estado para verificar el intento.';
+    case 'InvalidPaymentState':
+      return 'Este pedido no permite iniciar otro pago. Actualiza su estado.';
+    case 'PaymentIdentityMismatch':
+    case 'PaymentAmountMismatch':
+    case 'PaymentCurrencyMismatch':
+      return 'Los datos del pago no coinciden con el pedido. No se confirmó la compra; consulta su estado.';
+    case 'PaymentNotFound':
+      return 'El proveedor todavía no encuentra ese pago. Espera y vuelve a consultar.';
+    case 'InvalidProviderResponse':
+    case 'InvalidPaymentObservation':
+    case 'InvalidPaymentInput':
+      return 'No pudimos verificar el pago. Actualiza el estado sin crear otra compra.';
     case 'NetworkError':
       return 'No pudimos conectar. Revisa tu conexión e inténtalo de nuevo.';
     case 'SessionRequired':

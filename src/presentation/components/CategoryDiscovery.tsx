@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import type { Product } from '../../domain/contracts';
 import { categoryOf, type Category } from '../../domain/presentation';
 import { ProductArt } from './ProductArt';
@@ -15,6 +16,32 @@ export function CategoryDiscovery({
   products: Product[];
   onSelect: (category: Category) => void;
 }) {
+  const gallery = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ start: true, end: false });
+  function measure() {
+    const el = gallery.current;
+    if (el)
+      setEdges({
+        start: el.scrollLeft < 2,
+        end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2,
+      });
+  }
+  useEffect(() => {
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [products]);
+  function move(direction: number) {
+    const el = gallery.current;
+    if (el)
+      el.scrollBy({
+        left: direction * (el.clientWidth + 16),
+        behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)')
+          .matches
+          ? 'auto'
+          : 'smooth',
+      });
+  }
   if (!products.length) return null;
   return (
     <section
@@ -22,23 +49,39 @@ export function CategoryDiscovery({
       aria-labelledby="discover-title"
     >
       <div className="discovery-heading">
-        <div>
-          <p className="eyebrow">ELIGE TU MOMENTO</p>
-          <h2 id="discover-title">Un ritual, muchas formas.</h2>
+        <h2 id="discover-title">Encuentra tu esencial.</h2>
+        <div className="discovery-navigation" aria-label="Navegar categorías">
+          <button
+            className="icon-button"
+            aria-label="Categoría anterior"
+            disabled={edges.start}
+            onClick={() => move(-1)}
+          >
+            <Icon name="back" />
+          </button>
+          <button
+            className="icon-button"
+            aria-label="Siguiente categoría"
+            disabled={edges.end}
+            onClick={() => move(1)}
+          >
+            <Icon name="arrow" />
+          </button>
         </div>
-        <span className="atelier-flower" aria-hidden="true">
-          ✳
-        </span>
       </div>
-      <div className="category-discovery-grid">
+      <div
+        className="category-discovery-grid"
+        role="group"
+        aria-label="Categorías de productos"
+        ref={gallery}
+        onScroll={measure}
+      >
         {edits.map((edit) => {
-          const product = products.find(
-            (value) => categoryOf(value) === edit.category,
-          );
+          const product = products.find((p) => categoryOf(p) === edit.category);
           return (
             <button
-              key={edit.category}
               className="category-discovery-card"
+              key={edit.category}
               aria-label={`Explorar ${edit.category}`}
               disabled={!product}
               onClick={() => onSelect(edit.category)}
@@ -49,8 +92,8 @@ export function CategoryDiscovery({
                 <span className="category-placeholder" aria-hidden="true" />
               )}
               <span className="category-discovery-copy">
-                <small>{edit.copy}</small>
                 <strong>{edit.category}</strong>
+                <small>{edit.copy}</small>
               </span>
               <Icon name="arrow" />
             </button>

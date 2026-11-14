@@ -10,9 +10,9 @@ import {
   paginateProducts,
   type Category,
 } from '../../domain/presentation';
+import { AtelierSelect } from '../components/AtelierSelect';
 import { Pagination } from '../components/Pagination';
 import { CategoryDiscovery } from '../components/CategoryDiscovery';
-import { useReveal } from '../useReveal';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { ProductArt, imageSmall, imageLarge } from '../components/ProductArt';
 import { Icon } from '../components/Icon';
@@ -39,9 +39,7 @@ export function CataloguePage() {
   }, [dispatch]);
   const visible = filterProducts(products, search, category, sort, brand);
   const pagination = paginateProducts(visible, Number(params.get('page') ?? 1));
-  const reveal = useReveal(
-    pagination.items.map((product) => product.id).join(','),
-  );
+  const collection = useRef<HTMLElement>(null);
   useEffect(() => {
     if (
       catalogueStatus !== 'ready' ||
@@ -69,7 +67,7 @@ export function CataloguePage() {
   }
   function scrollCollection() {
     collectionHeading.current?.focus({ preventScroll: true });
-    reveal.current?.scrollIntoView({
+    collection.current?.scrollIntoView({
       behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
         ? 'auto'
         : 'smooth',
@@ -92,23 +90,17 @@ export function CataloguePage() {
     <>
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">EL ARTE DE LO COTIDIANO</p>
           <h1 tabIndex={-1}>
-            El color de
+            Belleza,
             <br />
-            <em>ser tú.</em>
+            <em>a tu manera.</em>
           </h1>
           <p className="hero-description">
-            Esenciales que se sienten como tú.
-            <br />
-            Descubre tu próximo toque de color.
+            Color, texturas y esenciales para un ritual que es solo tuyo.
           </p>
           <a className="button button--dark" href="#coleccion">
             Explorar la colección <Icon name="arrow" />
           </a>
-          <p className="hero-footnote">
-            Rosa suave. Cocoa cálido. Tu propia expresión.
-          </p>
         </div>
         <div className="hero-art">
           <img
@@ -120,34 +112,38 @@ export function CataloguePage() {
             fetchPriority="high"
             alt="Rubor rosa y labial en estuches marfil sobre un pedestal cálido"
           />
-          <span className="image-caption">LA COLECCIÓN ESENCIAL / 01</span>
         </div>
       </section>
       <div className="brand-strip" aria-label="Marcas de la colección">
-        <p>ENCUENTRA TUS FAVORITOS</p>
         {brands.map((value) => (
           <span key={value}>{value}</span>
         ))}
       </div>
       <CategoryDiscovery products={products} onSelect={discover} />
       {checkout.productId && (
-        <div className="resume-banner">
+        <aside
+          className="resume-banner section-wrap"
+          aria-label="Retomar tu compra"
+        >
           <span>Tu selección sigue aquí.</span>
           <Link
             to={
               checkout.transactionId || checkout.attempted
                 ? '/pedido'
-                : `/producto/${checkout.productId}`
+                : '/carrito'
             }
           >
             Retomar mi selección <Icon name="arrow" />
           </Link>
-        </div>
+        </aside>
       )}
-      <section ref={reveal} className="collection section-wrap" id="coleccion">
+      <section
+        ref={collection}
+        className="collection section-wrap"
+        id="coleccion"
+      >
         <div className="section-heading">
           <div>
-            <p className="eyebrow">01 / SELECCIÓN ATELIER</p>
             <h2 ref={collectionHeading} tabIndex={-1}>
               Tus nuevos esenciales.
             </h2>
@@ -167,7 +163,7 @@ export function CataloguePage() {
               onChange={(event) => setFilter('q', event.target.value)}
               type="search"
               maxLength={120}
-              placeholder="Encuentra tu próximo esencial"
+              placeholder="Buscar un producto"
             />
             {search && (
               <button
@@ -179,32 +175,36 @@ export function CataloguePage() {
             )}
           </label>
           <div className="catalogue-selects">
-            <label className="sort-field brand-filter">
-              <span>Marca</span>
-              <select
-                aria-label="Filtrar por marca"
-                value={brand}
-                onChange={(event) => setFilter('brand', event.target.value)}
-              >
-                <option value="Todas">Todas las marcas</option>
-                {brands.map((value) => (
-                  <option key={value}>{value}</option>
-                ))}
-                <option>Atelier</option>
-              </select>
-            </label>
-            <label className="sort-field">
-              <span>Ordenar</span>
-              <select
-                aria-label="Ordenar productos"
-                value={sort}
-                onChange={(event) => setFilter('sort', event.target.value)}
-              >
-                <option value="atelier">Selección atelier</option>
-                <option value="price">Menor precio</option>
-                <option value="price-desc">Mayor precio</option>
-              </select>
-            </label>
+            <AtelierSelect
+              label="Marca"
+              accessibleLabel="Filtrar por marca"
+              value={brand}
+              options={[
+                {
+                  value: 'Todas',
+                  label: 'Todas las marcas',
+                  shortLabel: 'Todas',
+                },
+                ...brands.map((value) => ({ value, label: value })),
+                { value: 'Atelier', label: 'Atelier' },
+              ]}
+              onChange={(value) => setFilter('brand', value)}
+            />
+            <AtelierSelect
+              label="Ordenar"
+              accessibleLabel="Ordenar productos"
+              value={sort}
+              options={[
+                {
+                  value: 'atelier',
+                  label: 'Selección atelier',
+                  shortLabel: 'Selección',
+                },
+                { value: 'price', label: 'Menor precio' },
+                { value: 'price-desc', label: 'Mayor precio' },
+              ]}
+              onChange={(value) => setFilter('sort', value)}
+            />
           </div>
         </div>
         <div className="catalogue-filters">
@@ -264,8 +264,8 @@ export function CataloguePage() {
           <Loading label="Buscando tus próximos esenciales…" />
         ) : (
           <div className="product-grid" id="product-grid">
-            {pagination.items.map((product, index) => (
-              <article className="product-card" data-reveal key={product.id}>
+            {pagination.items.map((product) => (
+              <article className="product-card" key={product.id}>
                 <Link
                   className="product-image-link"
                   to={`/producto/${product.id}`}
@@ -273,9 +273,6 @@ export function CataloguePage() {
                   aria-label={`Ver ${product.name}`}
                 >
                   <ProductArt product={product} />
-                  <span className="product-index">
-                    {String(pagination.start + index).padStart(2, '0')}
-                  </span>
                 </Link>
                 <div className="product-card-meta">
                   <p className="product-category">{brandOf(product)}</p>
@@ -287,7 +284,6 @@ export function CataloguePage() {
                       {product.name}
                     </Link>
                   </h3>
-                  <p className="product-description">{product.description}</p>
                   <div className="product-card-bottom">
                     <strong>{formatMoney(product.priceMinor)}</strong>
                     <Link
@@ -366,7 +362,6 @@ export function CataloguePage() {
       </section>
       <section className="faq section-wrap" id="ayuda">
         <div>
-          <p className="eyebrow">ESTAMOS PARA ACOMPAÑARTE</p>
           <h2>
             Una selección,
             <br />
@@ -376,10 +371,7 @@ export function CataloguePage() {
         <div className="faq-items">
           <details>
             <summary>¿Se hará algún cobro?</summary>
-            <p>
-              No. En esta versión puedes preparar tu entrega y reservar un
-              producto. El pago con tarjeta todavía no está habilitado.
-            </p>
+            <p>Pagos procesados con Wompi · Entorno de pruebas.</p>
           </details>
           <details>
             <summary>¿Cuánto dura mi reserva?</summary>

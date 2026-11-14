@@ -5,7 +5,7 @@
     align-items: center;
     font-size: 12px;
     color: var(--muted);
-    padding: 24px 0;
+    padding: 12px 0;
     overflow-wrap: anywhere;
   }
   .breadcrumbs a {
@@ -69,9 +69,7 @@
     padding: 16px 0;
     border-top: 1px solid var(--line);
   }
-  .tone-dot--rose {
-    background: #b47578;
-  }
+
   .detail-copy .stock-line {
     font-size: 12px;
   }
@@ -98,12 +96,17 @@
     height: 46px;
     transition: background var(--duration);
   }
-  .quantity-control button:hover:not(:disabled) {
-    background: var(--rose-soft);
+  @media (hover: hover) and (pointer: fine) {
+    .quantity-control button:hover:not(:disabled) {
+      background: var(--rose-soft);
+    }
   }
   .quantity-control .icon {
     width: 16px;
     height: 16px;
+  }
+  .quantity-control button:focus-visible {
+    outline-offset: -4px;
   }
   .quantity-control output {
     width: 34px;
@@ -135,7 +138,7 @@
     display: flex;
     justify-content: space-between;
     gap: 15px;
-    min-height: 28px;
+    min-height: 44px;
     align-items: center;
   }
   .detail-notes summary::after {
@@ -154,7 +157,7 @@
   }
 }
 @layer responsive {
-  @media (min-width: 900px) {
+  @media (min-width: 768px) {
     .product-page {
       padding-bottom: 40px;
     }
@@ -165,10 +168,11 @@
     }
     .detail-art {
       position: sticky;
-      top: 24px;
+      top: 128px;
     }
     .detail-art .product-art {
-      aspect-ratio: 4/5;
+      aspect-ratio: 1;
+      max-height: calc(100svh - 160px);
     }
     .detail-copy {
       padding-top: 12px;

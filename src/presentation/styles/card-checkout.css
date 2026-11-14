@@ -1,0 +1,167 @@
+@layer components {
+  .card-fields {
+    padding: 20px 0 28px;
+    margin: 0 0 26px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    min-width: 0;
+  }
+  .card-fields .checkout-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .card-fields .form-field--wide,
+  .card-fields .form-field:last-child {
+    grid-column: 1/-1;
+  }
+  .card-fields legend {
+    font-family: var(--serif);
+    font-size: 26px;
+    color: var(--ink);
+    padding: 0;
+    margin-bottom: 20px;
+  }
+  .card-number-control {
+    position: relative;
+    min-width: 0;
+  }
+  .card-number-control input {
+    width: 100%;
+    padding-inline-end: 66px;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-number-brand {
+    position: absolute;
+    inset-inline-end: 14px;
+    top: 0;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+  }
+  .card-number-brand img {
+    object-fit: contain;
+  }
+  .card-security-note {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--muted);
+    margin: 18px 0;
+  }
+  .card-consents {
+    display: grid;
+    gap: 12px;
+  }
+  .card-consents label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12px;
+    line-height: 1.7;
+    min-height: 44px;
+    cursor: pointer;
+  }
+  .card-consents input {
+    width: 19px;
+    height: 19px;
+    flex: none;
+    accent-color: var(--cocoa);
+    margin: 2px 0 0;
+  }
+  .card-consents a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .card-terms-unavailable {
+    padding: 16px;
+    background: var(--rose-soft);
+    font-size: 13px;
+  }
+  .payment-completing {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: 18px;
+    padding: 32px 4px 40px;
+  }
+  .payment-completing h3 {
+    font-size: clamp(28px, 5vw, 40px);
+    margin: 0;
+  }
+  .payment-completing > p:not(.eyebrow) {
+    max-width: 36ch;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--muted);
+  }
+  .payment-completing-actions {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    max-width: 320px;
+  }
+  .payment-alert {
+    width: min(430px, calc(100% - 24px));
+    max-height: calc(100dvh - 24px);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0;
+    background: var(--white);
+    color: var(--ink);
+    overflow: auto;
+  }
+  .payment-alert::backdrop {
+    background: #2e211da6;
+  }
+  .payment-alert-content {
+    padding: 28px 22px;
+    display: grid;
+    gap: 16px;
+  }
+  .payment-alert h2 {
+    font-size: 30px;
+    line-height: 1.15;
+    margin: 0;
+  }
+  .payment-alert-content > p:not(.eyebrow) {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .payment-alert .button {
+    width: 100%;
+    margin-top: 6px;
+  }
+}
+@layer responsive {
+  @media (min-width: 600px) {
+    .card-fields {
+      padding-block: 24px 32px;
+    }
+    .payment-completing {
+      padding-block: 48px;
+    }
+    .payment-alert-content {
+      padding: 32px;
+    }
+  }
+}
+@layer motion {
+  @media (prefers-reduced-motion: no-preference) {
+    .card-number-brand img {
+      animation: payment-alert-in 160ms ease-out both;
+    }
+    .payment-alert[open] {
+      animation: payment-alert-in 180ms ease-out both;
+    }
+  }
+  @keyframes payment-alert-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

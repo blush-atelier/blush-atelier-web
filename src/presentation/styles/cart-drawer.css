@@ -1,0 +1,109 @@
+@layer components {
+  .cart-drawer {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: min(440px, 100%);
+    height: 100dvh;
+    max-width: 100%;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--white);
+    color: var(--ink);
+  }
+  .cart-drawer[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  .cart-drawer::backdrop {
+    background: #2e211d80;
+  }
+  .cart-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .cart-drawer-header h2 {
+    font-size: 32px;
+    margin-top: 8px;
+  }
+  .cart-drawer-items {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
+    flex: 1;
+    padding: 0 20px;
+  }
+  .cart-drawer-item {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    padding-block: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .cart-drawer-item .product-art {
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius);
+  }
+  .cart-drawer-item h3 {
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .cart-drawer-item p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-block: 6px;
+  }
+  .cart-drawer-item strong {
+    font-size: 13px;
+  }
+  .cart-drawer-footer {
+    display: grid;
+    gap: 12px;
+    padding: 20px 20px max(20px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+  }
+  .cart-drawer-footer > .muted {
+    font-size: 11px;
+  }
+  .cart-drawer-subtotal {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+}
+@layer motion {
+  @keyframes cart-slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes cart-icon-pulse {
+    50% {
+      transform: translateY(-3px) rotate(-8deg);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .cart-drawer[open] {
+      animation: cart-slide-in 240ms var(--ease) both;
+    }
+    .cart-drawer[open]::backdrop {
+      animation: backdrop-enter 180ms ease both;
+    }
+    .order-link .icon,
+    .mobile-cart-icon > .icon {
+      animation: cart-icon-pulse 280ms var(--ease);
+    }
+  }
+}
