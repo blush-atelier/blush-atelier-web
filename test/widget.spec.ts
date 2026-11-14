@@ -133,3 +133,14 @@ it('constructor del proveedor que falla no revela su error', async () => {
     error: 'PaymentWidgetUnavailable',
   });
 });
+
+it('no rechaza localmente una llave stagtest de la prueba', async () => {
+  install();
+  const pending = createWompiWidget().open({
+    ...paymentSession,
+    publicKey: 'pub_stagtest_fixture',
+  });
+  await opened();
+  modal.hidden = true;
+  expect((await pending).ok).toBe(true);
+});

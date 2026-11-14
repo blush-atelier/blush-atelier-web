@@ -61,7 +61,7 @@ export function createWompiWidget(): PaymentWidgetPort {
       };
       try {
         if (
-          !/^pub_test_/.test(session.publicKey) ||
+          !/^pub_(?:test_|stagtest)[A-Za-z0-9_-]+$/.test(session.publicKey) ||
           !/^[1-9][0-9]{0,18}$/.test(session.amountMinor) ||
           BigInt(session.amountMinor) > BigInt(Number.MAX_SAFE_INTEGER) ||
           !Number.isFinite(Date.parse(session.expiresAt)) ||

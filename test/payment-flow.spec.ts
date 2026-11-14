@@ -215,3 +215,17 @@ it('persistencia nunca incluye sesión firmada ni datos del formulario', () => {
     'payment',
   );
 });
+
+it('acepta sesión con llave pública stagtest entregada por la API', async () => {
+  const fetcher = jest.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      ...paymentSession,
+      publicKey: 'pub_stagtest_fixture',
+    }),
+  });
+  expect(
+    await createHttpApi('', fetcher).preparePayment(transaction.id),
+  ).toEqual(success({ ...paymentSession, publicKey: 'pub_stagtest_fixture' }));
+});

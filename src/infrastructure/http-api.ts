@@ -246,7 +246,7 @@ export function createHttpApi(
       BigInt(value.amountMinor) > BigInt(Number.MAX_SAFE_INTEGER) ||
       value.currency !== 'COP' ||
       typeof value.publicKey !== 'string' ||
-      !/^pub_test_[A-Za-z0-9_]+$/.test(value.publicKey) ||
+      !/^pub_(?:test_|stagtest)[A-Za-z0-9_-]+$/.test(value.publicKey) ||
       typeof value.integrity !== 'string' ||
       !/^[a-f0-9]{64}$/i.test(value.integrity) ||
       typeof value.expiresAt !== 'string' ||

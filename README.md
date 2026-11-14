@@ -72,7 +72,7 @@ npm run test:cov
 npm run build
 ```
 
-Jest: **126 pruebas**, 11 suites. Cobertura local medida: **96,69% statements · 94,06% branches · 98,07% functions · 96,91% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
+Jest: **128 pruebas**, 11 suites. Cobertura local medida: **96,69% statements · 94,06% branches · 98,07% functions · 96,63% lines**. El umbral es **81%** en statements, branches, functions y lines; incluye todo `src`, también el arranque. Reporte generado: `coverage/lcov-report/index.html` (no versionado).
 
 CI ejecuta `npm ci` y todos los comandos anteriores en PR hacia development/staging/production y pushes a esas ramas o feature/*. La promoción es `feature/* → development → staging → production`; requiere configurar protecciones en GitHub. Workflow definido; ejecución remota pendiente. CD todavía no está habilitado.
 
