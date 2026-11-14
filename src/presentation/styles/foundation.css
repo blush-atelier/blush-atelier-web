@@ -205,6 +205,7 @@
     border-color: var(--line);
     background: var(--white);
     color: var(--cocoa);
+    margin-top: 10px;
   }
   .button .icon,
   .text-button .icon,
